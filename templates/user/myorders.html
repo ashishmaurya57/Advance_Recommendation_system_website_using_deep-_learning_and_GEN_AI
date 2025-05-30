@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+<style>
+      .but1
+        {
+        color:white;
+        font-size:13px;
+        border-radius:5px;
+        }
+        .but1:hover
+        {
+        background:#ff0099;
+        color:white;
+        text-decoration:underline;
+        transition:all ease 1s;
+        }
+
+
+
+
+
+</style>
+<div class="row">
+    <div class="h3 text-center pt-2"><b>My</b><b style="color:#4e83ab">Orders<i class="fa fa-shopping-cart"></i></b>
+    </div>
+
+    <div class="col-sm-12 py-2 text-center fontfamily">
+        <table class="table table-stripted" style="font-size:15px;">
+            <tr class="bg-light">
+                <th>{% trans "Product Id" %}</th>
+                <th>{% trans "Picture" %}</th>
+                <th>{% trans "Product Name" %}</th>
+                <th>{% trans "Description" %}</th>
+                <th>{% trans "Total Price" %}</th>
+                <th>{% trans "Discounted Price" %}</th>
+                <th>{% trans "Cancel" %}</th>
+                <th>{% trans "Remarks" %}</th>
+                <th>{% trans "Date" %}</th>
+            </tr>
+            {% if pendingorder %}
+            {% for x in pendingorder %}
+            <tr class="fonts text-center m-3" style="font-size:14px;padding-top:10px;">
+                <td class="pt-4">{{x.1}}</td>
+                <td><img src="/{{x.8}}" class="img-thumbnail" style="max-height:80px"/></td>
+                <td class="pt-4">{{x.7}}</td>
+                <td class="pt-4">{{x.14}}</td>
+                <td class="pt-4"><i class="btn btn-outline-danger"><s>{{x.12}}</s></i></td>
+                <td class="pt-4"><i class="btn btn-outline-success">{{x.13}}</i></td>
+                <td class="pt-4"><a href="/user1/myorders?oid={{x.0}}" class="btn rounded but1"
+                                    style="font-size:14px;background:#dc3545;">{% trans "Cancel" %}</a></td>
+                <td class="pt-4"><a href="#" class="btn rounded but" style="font-size:14px">{{x.3}}</a></td>
+                <td class="pt-4">{{x.5}}</td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </table>
+    </div>
+
+</div>
+{% endblock %}

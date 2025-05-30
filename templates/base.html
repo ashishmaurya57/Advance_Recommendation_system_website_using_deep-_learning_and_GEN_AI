@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Booktown|Online Book Store</title>
+    <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet"/>
+    <script src="{% static 'js/bootstrap.js' %}"></script>
+    <link href="{% static 'images/bookicon.png'%}" rel="icon"/>
+    <link href="{% static 'css/font-awesome.css '%}" rel="stylesheet"/>
+    <style>
+        .t
+        {
+        min-height:30px;
+        text-align:center;
+        padding-top:3px;
+        }
+        .ic
+        {
+        color:#4e83ab;
+        border:1px solid #039be5;
+        height:25px;
+        width:25px;
+        padding:4px;
+        border-radius:2px;
+        margin-left:4px;
+        }
+        .ic:hover
+        {
+        background:#4e83ab;
+        color:white;
+        transition:all ease 1s;
+        transform:rotate(360deg);
+        }
+        .header1
+        {
+        min-height:55px;
+        }
+        .menu
+        {
+        min-height:45px;
+        background:#4e83ab;
+        }
+        #menu1 ul li a
+        {
+        background:#4e83ab;
+        color:white;
+        font-size:13px;
+        }
+         #menu1 ul li a:hover
+        {
+        background:#859bba;
+        color:white;
+        border-radius:5px;
+        text-decoration:underline;
+        transition:all ease 1s;
+        }
+        .but
+        {
+        background:#4e83ab;
+        color:white;
+        font-size:13px;
+        border-radius:5px;
+        }
+        .but:hover
+        {
+        background:#859bba;
+        color:white;
+        font-size:13px;
+         text-decoration:underline;
+        transition:all ease 1s;
+        }
+        .newproduct
+        {
+        min-height:500px;
+        }
+        .services
+        {
+        height:350px;
+        }
+        .Ufooter
+        {
+        min-height:300px;
+        background:black;
+        font-size:12px;
+        }
+        .bfooter
+        {
+        min-height:40px;
+        margin-top:1px;
+        background:#4e83ab;
+        }
+        .font
+        {
+        font-size:12px;
+        }
+        .fontfamily
+        {
+        font-family:Arial;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid fontfamily">
+    <!---header--->
+    <div class="row t bg-light">
+        <div class="col-sm-4 border-end ">
+            <div class="row header1 py-2">
+                <div class="col-sm-1"></div>
+                <div class="col-sm-10 fs-3 text-center">
+                    <span class="py-1"><b>The</b><b style="color:#4e83ab">Booktown<i class="fa fa-book"></i></b></span>
+                </div>
+                <div class="col-sm-1"></div>
+            </div>
+        </div>
+        <div class="col-sm-4 border-end">
+            <div class="row header1 py-2">
+                <div class="col-sm-1"></div>
+                <div class="col-sm-10 pt-2 font">
+                    <span style="font-size:14px;">Welcome to The<b style="color:#4e83ab"> Booktown<i
+                            class="fa fa-book"></i></b> Pvt. Ltd.</span>
+                </div>
+                <div class="col-sm-1"></div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="row header1 py-2">
+                <div class="col-sm-1"></div>
+                <div class="col-sm-8 pt-1">
+                    <a href="#"><i class="fa fa-facebook ic"></i></a>
+                    <a href="#"><i class="fa fa-twitter ic"></i></a>
+                    <a href="#"><i class="fa fa-whatsapp ic"></i></a>
+                    <a href="#"><i class="fa fa-youtube ic"></i></a>
+                    <a href="#"><i class="fa fa-instagram ic"></i></a>
+                    <a href="#"><i class="fa fa-twitter ic"></i></a>
+                </div>
+                <div class="col-sm-1"></div>
+            </div>
+        </div>
+    </div>
+    <!--end header-->
+    <!--start menu-->
+    <div class="row menu sticky-top">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-sm-3">
+                    {% if request.session.userid %}
+                    <button class="btn rounded but">
+                        <a class="nav-link active" style="color:white;" aria-current="page"
+                           href="/user1/cart/"><i class="fa fa-shopping-cart"></i> {{noofitemsincart}} </a>
+                    </button>
+                    {% else %}
+                    <button class="btn rounded but">
+                        <a class="nav-link active" style="color:white;" aria-current="page"
+                           href="/user1/home/"><i class="fa fa-shopping-cart"style="height:7px;width:12px;"></i></a>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="col-sm-6">
+                    <!-- Search Bar -->
+                    <form method="get" action="{% url 'search_view' %}" class="d-flex">
+                        <input class="form-control me-2" type="search" name="q" placeholder="Search for products..." aria-label="Search" required>
+                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    </form>
+                </div>
+                <div class="col-sm-8 ps-3">
+                    <!--start menu-->
+                    <nav class="navbar navbar-expand-lg navbar-light" id="menu1">
+                        <div class="container-fluid">
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+                                    aria-expanded="false"
+                                    aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                                <ul class="navbar-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" aria-current="page" href="/user1/home/"><i
+                                                class="fa fa-home"></i> Home</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/products/"><i class="fa fa-product-hunt"></i>
+                                            Products</a>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/myorders/"><i class="fa fa-list"></i> My Orders</a>
+                                    </li>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/contactus"><i class="fa fa-address-book"></i>
+                                            Contact
+                                            Us</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/about/"><i class="fa fa-info"></i> About Us</a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/signup/"><i class="fa fa-user-plus"></i> Sign
+                                            Up</a>
+                                    </li>
+                                    {% if request.session.userid %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/myprofile/"><i class="fa fa-id-badge"></i>
+
+                                            {{request.session.userid}}</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/logout/"><i class="fa fa-sign-out"></i> Log Out</a>
+                                    </li>
+
+                                    {% else %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/myprofile/"><i class="fa fa-user"></i> My
+                                            Profile</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/user1/signin/"><i class="fa fa-sign-in"></i> Sign In</a>
+                                    </li>
+
+                                    {% endif %}
+                                    <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    🌐 Language
+  </a>
+  <ul class="dropdown-menu" aria-labelledby="langDropdown">
+    <li><a class="dropdown-item" href="{% url 'set_language' %}?language=en">English</a></li>
+    <li><a class="dropdown-item" href="{% url 'set_language' %}?language=hi">Hindi</a></li>
+    <li><a class="dropdown-item" href="{% url 'set_language' %}?language=fr">French</a></li>
+    <li><a class="dropdown-item" href="{% url 'set_language' %}?language=es">Spanish</a></li>
+    <li><a class="dropdown-item" href="{% url 'set_language' %}?language=de">German</a></li>
+  </ul>
+</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!--end menu-->
+    <div class="row content" style="min-height:550px;">
+        <div class="col-sm-12 py-2">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+
+    <!--footer-->
+    <div class="row Ufooter">
+        <!-- Footer -->
+        <footer class="text-center text-lg-start bg-dark text-light">
+            <!-- Section: Social media -->
+            <section
+                    class="d-flex justify-content-center justify-content-lg-between p-3 border-bottom">
+                <!-- Left -->
+                <div class="me-5 d-none d-lg-block">
+                    <b style="color:#4e83ab">Follow Us on...</b>
+                </div>
+                <!-- Left -->
+
+                <!-- Right -->
+                <div>
+                    <a href="" class="me-3 text-reset">
+                        <i class="fa fa-facebook-f"></i>
+                    </a>
+                    <a href="" class="me-3 text-reset">
+                        <i class="fa fa-twitter"></i>
+                    </a>
+                    <a href="" class="me-3 text-reset ">
+                        <i class="fa fa-linkedin"></i>
+                    </a>
+                    <a href="" class="me-3 text-reset">
+                        <i class="fa fa-pinterest"></i>
+                    </a>
+                    <a href="" class="me-3 text-reset">
+                        <i class="fa fa-youtube"></i>
+                    </a>
+                    <a href="" class="me-3 text-reset">
+                        <i class="fa fa-instagram"></i>
+                    </a>
+
+                </div>
+                <!-- Right -->
+            </section>
+            <!-- Section: Social media -->
+
+            <!-- Section: Links  -->
+            <section class="">
+                <div class="container text-center text-md-start mt-5">
+                    <!-- Grid row -->
+                    <div class="row mt-3">
+                        <!-- Grid column -->
+                        <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
+                            <!-- Content -->
+                            <h6 class="text-uppercase fw-bold mb-4">
+                                <i class="fa fa-gem me-1"></i>Company
+                            </h6>
+                            <p>
+                                <a href="#" class="text-reset">About Us</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Career</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Blog</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Contact US</a>
+                            </p>
+                        </div>
+                        <!-- Grid column -->
+
+                        <!-- Grid column -->
+                        <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
+                            <!-- Links -->
+                            <h6 class="text-uppercase fw-bold mb-4">
+                                Policies
+                            </h6>
+                            <p>
+                                <a href="#!" class="text-reset">Privacy Policies</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Terms of Use</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Secure Shopping</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Copyright Policy</a>
+                            </p>
+                        </div>
+                        <!-- Grid column -->
+
+                        <!-- Grid column -->
+                        <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
+                            <!-- Links -->
+                            <h6 class="text-uppercase fw-bold mb-4">
+                                Help
+                            </h6>
+                            <p>
+                                <a href="#!" class="text-reset">Payment</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Shipping</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Return</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">FAQ</a>
+                            </p>
+                        </div>
+                        <!-- Grid column -->
+
+                        <!-- Grid column -->
+                        <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
+                            <!-- Links -->
+                            <h6 class="text-uppercase fw-bold mb-4">
+                                Misc
+                            </h6>
+                            <p>
+                                <a href="#!" class="text-reset">Affiliate</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Request a Book</a>
+                            </p>
+                            <p>
+                                <a href="#!" class="text-reset">Sitemap</a>
+                            </p>
+                        </div>
+                        <!-- Grid column -->
+                    </div>
+                    <!-- Grid row -->
+                </div>
+            </section>
+            <!-- Section: Links  -->
+        </footer>
+        <!-- Footer -->
+    </div>
+    <!--end footer-->
+
+    <div class="row bfooter text-light bg-dark text-center py-2 font fontfamily">
+
+        <div class="col-sm-4">
+            &copy;2021<span style="color:#4e83ab;">.Booktown.com.All Rights Reserved</span>
+        </div>
+        <div class="col-sm-4">
+            | Address:<span style="color:#4e83ab;">Anmol Booktown Factory Pvt.Ltd.,ground floor,Gorakhpur</span>
+        </div>
+        <div class="col-sm-4">
+            <span>Privacy and Policy | Terms & Conditions</span>
+        </div>
+    </div>
+
+</div>
+</body>
+
+</html>

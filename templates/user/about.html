@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+.about{
+	color:#4e83ab;
+	padding-top: 10px;
+	padding-bottom: 30px;
+}
+.about h1 {
+	padding: 10px 0;
+	margin-bottom: 15px;
+}
+.about h2 {
+	opacity: .8;
+}
+.about span {
+	width: 100px;
+	height:100px;
+	margin:auto;
+	font-size:50px;
+	color: black;
+	opacity: 0.7;
+}
+.about-item:hover span{
+	opacity: 1;
+	border: 2px solid #4e83ab;
+}
+.about-item:hover h2{
+	opacity: 1;
+}
+.about .lead{
+	color: black;
+	font-size: 13px;
+	font-weight: bold;
+}
+</style>
+
+ <section class="text-center about">
+      <div class="h3 text-center pb-3"><b style="color:black;">About</b><b style="color:#4e83ab">Us<i class="fa fa-info"></i></b></div>
+      <div class="container bg-light py-2">
+        <div class="row pt-4">
+          <div class="col-sm-4 about-item" >
+            <span class="fa fa-group pt-3"></span>
+            <h3>{% trans "Our Team" %}</h3>
+            <p class="fontfamily"style="color:black;">{% trans "We are very thankful to our creative team they did grat job by making this huge and wonderful project." %}</p>
+          </div>
+          <div class="col-sm-4 about-item">
+            <span class="fa fa-info pt-3"></span>
+            <h3>{% trans "About The BookTown" %}</h3>
+            <p class="fontfamily"style="color:black;">{% trans "The BookTown is an open,editable library catalog,building towards a web page for every book ever published.
+            one web page for every book ever published.It is a lofty but achievable goal." %}</p>
+          </div>
+          <div class="col-sm-4 about-item">
+            <span class="fa fa-file pt-3"></span>
+            <h3>{% trans "Our Policy" %}</h3>
+            <p class="fontfamily"style="color:black;">{% trans "BookTown is open project,and we welcome your contribution.our project is a project of non-profit Internet Archieve
+            and has been made for helping human kind." %}</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+{% endblock %}

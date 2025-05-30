@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<!--START SLIDER-->
+<div class="row slider">
+    <div class="h3 text-center"><b>Deals</b><b style="color:#4e83ab">Of</b><b>The</b><b style="color:#4e83ab">Day</b></div>
+    <div class="col-sm-12">
+        <!--start slider-->
+        <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active"
+                        aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1"
+                        aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2"
+                        aria-label="Slide 3"></button>
+            </div>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="{% static 'images/sliderz2a.jpg' %}" class="d-block w-100" style="max-height:500px"
+                         alt="...">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Summer Reading</h5>
+                        <p>Meet your next favourite book.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="{% static 'images/sliderz3a.jpg' %}" class="d-block w-100" style="max-height:500px"
+                         alt="...">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Magic Books</h5>
+                        <p>Coming out day Reading List.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="{% static 'images/sliderz1a.jpg' %}" class="d-block w-100" style="max-height:500px"
+                         alt="...">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Just Us</h5>
+                        <p>Biography and Memories.</p>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions"
+                    data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions"
+                    data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</div>
+<!--END SLIDER-->
+
+<!-- Personalized Recommendations (only for logged in users) -->
+{% if request.session.userid %}
+<div class="row mt-5" id="recommendations-row">
+    <h3 class="text-center">Recommended for You</h3>
+    <div id="recommendations-container" class="d-flex flex-wrap" style="gap: 10px;"></div>
+<div id="pagination-controls" class="mt-3 d-flex justify-content-center gap-2">
+  <button id="prev-btn" class="btn btn-secondary btn-sm">Previous</button>
+  <span id="page-info" class="align-self-center"></span>
+  <button id="next-btn" class="btn btn-secondary btn-sm">Next</button>
+</div>
+
+
+
+</div>
+{% else %}
+<div class="row mt-5" id="recommendations-row" style="display:none;">
+    <div id="recommendations-container" class="d-flex flex-wrap" style="gap: 10px;"></div>
+<div id="pagination-controls" class="mt-3 d-flex justify-content-center gap-2">
+  <button id="prev-btn" class="btn btn-secondary btn-sm">Previous</button>
+  <span id="page-info" class="align-self-center"></span>
+  <button id="next-btn" class="btn btn-secondary btn-sm">Next</button>
+</div>
+
+
+
+</div>
+{% endif %}
+<br>
+<br>
+<br>
+<br>
+<!--category-->
+<div class="row category bg-light fontfamily py-2">
+    <div class="h3 text-center pt-1"><b>Best</b><b style="color:#4e83ab"> Sellers</b></div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-10 pt-1">
+        <div class="row">
+            {% if data %}
+            {% for x in data %}
+            <div class="col-sm-2" style="min-width:170px;">
+                <div class="row">
+                    <div class="col-sm-12 border p-2">
+                        <div class="card w-100">
+                            <img src="/{{x.ppic}}" class="card-img-top" alt="..." style="height:180px;width:180px;padding:5px;object-fit:contain;">
+                            <div class="card-body">
+                                <div class="font text-center">{{x.cname}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-sm-1"></div>
+</div>
+<!--end category-->
+
+<!--start new product-->
+<div class="row newproduct py-2 fontfamily">
+    <div class="h3 text-center pt-1"><b>New</b><b style="color:#4e83ab"> Release</b><b> Books</b></div>
+    {% if products %}
+    {% for x in products %}
+    <div class="col-sm-2 pt-1">
+        <div class="card w-100">
+            <img src="/{{x.ppic}}" class="card-img-top" alt="..." style="height:180px;width:180px;padding:5px;object-fit:contain;">
+            <div class="card-body">
+                <b class="card-title" style="font-size:15px">{{x.name|truncatechars:20}}</b>
+                <p style="color:grey;font-size:14px;">{{x.category.cname}}</p>
+                <p style="font-size:13px;"><b style="font-size:13px">Language:</b> {{x.language}}</p>
+                <b style="font-size:14px;">Rs: </b> 
+                <s class="text-danger font">{{x.tprice}}/-</s>
+                <b style="font-size:13px;">{{x.disprice}}/-</b>
+                <div class="mt-2">
+                    <a href="/user1/viewdetails/?msg={{x.id}}" class="btn btn-sm btn-primary">View</a>
+                    <a href="/user1/process?pid={{x.id}}&bn=cart" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa fa-shopping-cart"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<!-- Similar Books Section (if viewing as guest) -->
+{% if not request.session.userid %}
+<div class="row mt-4 fontfamily">
+    <div class="h3 text-center pt-1">
+        <b>Popular</b> 
+        <b style="color:#4e83ab">Books</b>
+    </div>
+    {% for book in products|slice:":6" %}
+    <div class="col-sm-2 pt-1">
+        <div class="card w-100">
+            <img src="/{{ book.ppic }}" class="card-img-top" alt="{{ book.name }}" style="height:180px;width:180px;padding:5px;object-fit:contain;">
+            <div class="card-body">
+                <b class="card-title" style="font-size:15px">{{ book.name|truncatechars:20 }}</b>
+                <p style="color:grey;font-size:14px;">{{ book.category.cname }}</p>
+                <b style="font-size:14px;">Rs: </b> 
+                <s class="text-danger font">{{ book.tprice }}/-</s>
+                <b style="font-size:13px;">{{ book.disprice }}/-</b>
+                <div class="mt-2">
+                    <a href="/user1/viewdetails/?msg={{ book.id }}" class="btn btn-sm btn-primary">View</a>
+                    <a href="/user1/process?pid={{ book.id }}&bn=cart" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa fa-shopping-cart"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row fontfamily">
+    <div class="h3 text-center pt-4"><b>Watch</b><b style="color:#4e83ab"> Our</b><b> New</b><b style="color:#4e83ab"> Documentary</b> Series</div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-10 offer my-2 bg-light text-primary">
+        <div class="row">
+            <div class="col-sm-4">
+                <b>01.</b>
+                <div class="fs-3">Maya Banks</div>
+                <p>(Wherever You Are) A KGI novel of nonstop suspense and explosive passion from #1 New York Times bestselling author of brighter than the sun.</p>
+                <b>02.</b>
+                <div class="fs-3">All the Feels</div>
+                <p>Olivia Dade returns with another utterly charming romantic comedy about a devil-may-care actor who actually cares more than anyone knows and no-nonsense woman hired to keep him in line.</p>
+            </div>
+            <div class="col-sm-4">
+                <div class="row">
+                    <div class="col-sm-12"></div>
+                    <img src="{% static 'images/midbook4a.jpg'%}" style="padding:30px;"/>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <b>03.</b>
+                <div class="fs-3">Sleepless</div>
+                <p>It's been years since Nadja Kulka was convicted of a cruel crime. After being released from prison, she's wanted nothing more than to live a normal life.</p>
+                <b>04.</b>
+                <div class="fs-3">E.R. Nurses</div>
+                <p>James Patterson and Matt Eversmann present the medical frontline heroes who work to save our lives every day: E.R. Nurses. This book will make you laugh, make you cry, make you understand.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-1"></div>
+</div>
+
+<!--start services-->
+<div class="row services p-2 fontfamily">
+    <div class="col-sm-6 px-5">
+        <div class="h3 pt-3"><b>Services</b><b style="color:#4e83ab"><i class="fa fa-tasks"></i></b></div>
+        <p class="f6 font-family">The BookTown is an open, editable library catalog, building towards a web page for every book ever published. One web page for every book ever published. It is a lofty but achievable goal. BookTown is open project, and we welcome your contribution. Our project is a project of non-profit Internet Archive and has been made for helping human kind. We are trying always to fulfill our readers wishes.
+        </p>
+        <br/>
+        <input type="button" value="View More.." class="btn but"/>
+    </div>
+    <div class="col-sm-6 py-4">
+        <img src="{% static 'images/sliderz5b.jpg' %}" class="img-fluid" style="height:300px;width:90%"/>
+    </div>
+</div>
+<!--end services-->
+<script>
+{% if request.session.userid %}
+
+const perPage = 12; // 2 rows of 6
+let currentPage = 1;
+let products = [];
+const container = document.getElementById('recommendations-container');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const pageInfo = document.getElementById('page-info');
+
+function renderPage(page) {
+  container.innerHTML = '';
+  const start = (page - 1) * perPage;
+  const end = start + perPage;
+  const currentItems = products.slice(start, end);
+
+  currentItems.forEach(product => {
+    const card = document.createElement('div');
+    card.className = "card";
+    card.style.flex = "0 0 calc(100% / 6 - 10px)";
+    card.style.maxWidth = "calc(100% / 6 - 10px)";
+    card.style.margin = "0";
+    card.innerHTML = `
+      <img src="${product.ppic}" class="card-img-top" alt="${product.name}" style="height:180px; object-fit:contain;">
+      <div class="card-body p-2">
+        <h6 class="card-title" style="font-size:14px;">${product.name.length > 20 ? product.name.substring(0, 20) + '...' : product.name}</h6>
+        <p class="card-text" style="font-size:12px; color:gray;">${product.category}</p>
+        <b>Rs: </b><s class="text-danger">${product.tprice}/-</s>
+        <b>${product.disprice}/-</b>
+        <a href="/user1/viewdetails/?msg=${product.id}" class="btn btn-sm btn-primary mt-1">View</a>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  const totalPages = Math.ceil(products.length / perPage);
+  pageInfo.textContent = `Page ${page} of ${totalPages}`;
+  prevBtn.disabled = page === 1;
+  nextBtn.disabled = page === totalPages;
+
+  if (products.length === 0) {
+    container.innerHTML = "<p>No recommendations available.</p>";
+    pageInfo.textContent = "";
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+  } else {
+    prevBtn.style.display = 'inline-block';
+    nextBtn.style.display = 'inline-block';
+  }
+}
+
+function fetchRecommendations() {
+  fetch("/api/get_recommendations/")
+    .then(res => res.json())
+    .then(data => {
+      const newProducts = data.products || [];
+      
+      // Check if new data differs from current products before updating
+      if (JSON.stringify(newProducts) !== JSON.stringify(products)) {
+        products = newProducts;
+        currentPage = 1; // reset to first page when recommendations update
+        renderPage(currentPage);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+    });
+}
+
+prevBtn.addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderPage(currentPage);
+  }
+});
+
+nextBtn.addEventListener('click', () => {
+  if (currentPage < Math.ceil(products.length / perPage)) {
+    currentPage++;
+    renderPage(currentPage);
+  }
+});
+
+// Initial fetch and render
+fetchRecommendations();
+
+// Poll every 15 seconds to check for updated recommendations
+setInterval(fetchRecommendations, 700000);
+
+{% endif %}
+</script>
+
+
+{% endblock %}

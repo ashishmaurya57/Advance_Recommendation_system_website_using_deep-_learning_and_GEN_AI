@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<style>
+    .form-control {
+        margin-bottom: 10px;
+    }
+
+    .signup {
+        min-height: 500px;
+    }
+
+    ::placeholder {
+        font-size: 13px;
+    }
+
+    input[type] {
+        font-size: 13px;
+    }
+
+    .genre-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+
+<div class="row py-2">
+    <div class="h3 text-center p-1"><b>My</b><b style="color:#4e83ab">Profile<i class="fa fa-id-badge"></i></b></div>
+    <div class="col-sm-3 pt-1"></div>
+    <div class="col-sm-6">
+        <div class="row">
+            <div class="col-sm-12">
+                {% if profile %}
+                <div class="card mb-3" style="border:1px solid #4e83ab;">
+                    <div class="row g-0 fontfamily" style="font-size:16px;">
+                        <div class="col-md-5 p-2" style="border:1px solid #4e83ab;">
+                            <img src="/{{ profile.ppic }}" class="img-fluid rounded-start" alt="..." style="height:230px;width:290px;">
+                        </div>
+                        <div class="col-md-7" style="border:1px solid #4e83ab;">
+                            <div class="card-body">
+                                <p class="card-title pt-2"><b style="color:#4e83ab;font-size:22px;">{{ profile.name }}</b></p>
+                                <p><b>Date Of Birth: </b> {{ profile.dob }}</p>
+                                <p><b>Mobile No: </b> {{ profile.mobile }}</p>
+                                <p><b>Email id: </b> {{ profile.email }}</p>
+                                <p><b>Current Address: </b> {{ profile.address }}</p>
+                                <p><b>Interests: </b> {{ profile.interests }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% if request.session.userid %}
+            <div class="col-sm-12 py-2">
+                <div class="h3 text-center"><b>Update</b><b style="color:#4e83ab">Profile<i class="fa fa-id-badge"></i></b></div>
+                <form method="post" autocomplete="off" enctype="multipart/form-data" style="font-size:13px;">
+                    {% csrf_token %}
+                    <div class="row fontfamily bg-light">
+                        <div class="col-sm-12 pb-2 pt-1">
+                            <b>Name</b>
+                            <input type="text" name="name" class="form-control" placeholder="Enter your Name" value="{{ profile.name }}"/>
+                            <b>Date of Birth</b>
+                            <input type="date" name="dob" class="form-control font" placeholder="Enter your Birth date" value="{{ profile.dob }}"/>
+                            <b>Mobile No</b>
+                            <input type="number" name="mobile" class="form-control" placeholder="Enter your Mob no.." value="{{ profile.mobile }}"/>
+                            <b>Password</b>
+                            <input type="password" name="passwd" required class="form-control" placeholder="Enter your Password" value="{{ profile.passwd }}"/>
+                            <b>Profile Picture</b>
+                            <input type="file" name="ppic" class="form-control font"/>
+                            <b>Address</b>
+                            <textarea class="form-control" name="address" style="min-height:80px;resize:none;" placeholder="Enter Your Address.">{{ profile.address }}</textarea>
+
+                            <b>Interests (Select Genres)</b>
+                            <div class="form-group">
+                                <select id="genreDropdown" class="form-control" style="min-height: 40px;">
+                                    <option value="" disabled selected>Select a Genre</option>
+                                    <option value="Fiction">Fiction</option>
+                                    <option value="Non-Fiction">Non-Fiction</option>
+                                    <option value="Mystery">Mystery</option>
+                                    <option value="Romance">Romance</option>
+                                    <option value="Science Fiction">Science Fiction</option>
+                                    <option value="Fantasy">Fantasy</option>
+                                    <option value="Biography">Biography</option>
+                                    <option value="Self-Help">Self-Help</option>
+                                    <option value="History">History</option>
+                                    <option value="Thriller">Thriller</option>
+                                </select>
+                                <button type="button" id="addGenreButton" class="btn btn-primary mt-2">{% trans "Add Genre" %}</button>
+                            </div>
+
+                            <!-- Display Selected Genres -->
+                            <b>Selected Genres</b>
+                            <div id="selectedGenres" class="form-control" style="min-height: 80px; resize: none; overflow-y: auto;">
+                                {% for genre in interests_list %}
+                                <span class="badge bg-secondary me-1 genre-badge">
+                                    {{ genre }}
+                                    <button type="button" class="btn-close btn-close-white ms-1 remove-genre" aria-label="Remove" data-genre="{{ genre }}"></button>
+                                </span>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Hidden Input to Store Selected Genres -->
+                            <input type="hidden" name="interests" id="interestsInput" value="{{ profile.interests }}" />
+
+                            <input type="submit" value="Update" class="btn rounded but mt-3"/>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% else %}
+            <p class="fs-6 bg-light text-center" style="color:#4e83ab">{% trans "No Data Found" %}</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-sm-3"></div>
+</div>
+
+<script>
+    document.getElementById('addGenreButton').addEventListener('click', function () {
+        const dropdown = document.getElementById('genreDropdown');
+        const selectedGenre = dropdown.value;
+        const selectedGenresDiv = document.getElementById('selectedGenres');
+        const interestsInput = document.getElementById('interestsInput');
+
+        if (selectedGenre && !interestsInput.value.includes(selectedGenre)) {
+            // Add the selected genre to the display div
+            const genreSpan = document.createElement('span');
+            genreSpan.className = 'badge bg-secondary me-1 genre-badge';
+            genreSpan.innerHTML = `
+                ${selectedGenre}
+                <button type="button" class="btn-close btn-close-white ms-1 remove-genre" aria-label="Remove" data-genre="${selectedGenre}"></button>
+            `;
+            selectedGenresDiv.appendChild(genreSpan);
+
+            // Update the hidden input field
+            const currentGenres = interestsInput.value ? interestsInput.value.split(', ') : [];
+            currentGenres.push(selectedGenre);
+            interestsInput.value = currentGenres.join(', ');
+        }
+    });
+
+    document.getElementById('selectedGenres').addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-genre')) {
+            const genreToRemove = e.target.getAttribute('data-genre');
+            const interestsInput = document.getElementById('interestsInput');
+            const currentGenres = interestsInput.value.split(', ');
+
+            // Remove the genre from the hidden input field
+            const updatedGenres = currentGenres.filter(genre => genre !== genreToRemove);
+            interestsInput.value = updatedGenres.join(', ');
+
+            // Remove the badge from the display
+            e.target.parentElement.remove();
+        }
+    });
+</script>
+{% endblock %}

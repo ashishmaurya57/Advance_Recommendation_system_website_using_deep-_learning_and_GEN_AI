@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .form-control {
+        margin-bottom: 10px;
+    }
+
+    .signup {
+        min-height: 500px;
+    }
+
+    ::placeholder {
+        font-size: 13px;
+    }
+
+    input[type] {
+        font-size: 13px;
+    }
+
+    .genre-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+
+<div class="row fontfamily">
+    <div class="h3 text-center"><b>Sign</b><b style="color:#4e83ab">Up<i class="fa fa-user"></i></b></div>
+    <div class="col-sm-4 py-2"></div>
+    <div class="col-sm-4 pt-2 bg-light signup">
+        <form method="post" autocomplete="off" enctype="multipart/form-data" style="font-size:13px;">
+            {% csrf_token %}
+            {% if S %}
+            <div class="alert alert-success">
+                Registered Successfully...
+            </div>
+            {% endif %}
+            <div class="row">
+                <div class="col-sm-12">
+                    <b>Name</b>
+                    <input type="text" name="name" required class="form-control" placeholder="Enter your Name" />
+                    <b>Date of Birth</b>
+                    <input type="date" name="dob" required class="form-control" style="font-size:12px;" placeholder="Enter your Birth date" />
+                    <b>Mobile</b>
+                    <input type="number" name="mobile" required class="form-control" placeholder="Enter your Mob no.." />
+                    <b>Email</b>
+                    <input type="email" name="email" required class="form-control" placeholder="Enter your Email" />
+                    <b>Password</b>
+                    <input type="password" name="passwd" required class="form-control" placeholder="Enter your Password" />
+                    <b>Profile Picture</b>
+                    <input type="file" name="ppic" required class="form-control font" />
+                    <b>Address</b>
+                    <textarea class="form-control" name="address" style="min-height:80px;resize:none;" placeholder="Enter Your Address." required></textarea>
+
+                    <b>Interests (Select Genres)</b>
+                    <div class="form-group">
+                        <select id="genreDropdown" class="form-control" style="min-height: 40px;">
+                            <option value="" disabled selected>Select a Genre</option>
+                            <option value="Fiction">Fiction</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                            <option value="Mystery">Mystery</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Science Fiction">Science Fiction</option>
+                            <option value="Fantasy">Fantasy</option>
+                            <option value="Biography">Biography</option>
+                            <option value="Self-Help">Self-Help</option>
+                            <option value="History">History</option>
+                            <option value="Thriller">Thriller</option>
+                        </select>
+                        <button type="button" id="addGenreButton" class="btn btn-primary mt-2">{% trans "Add Genre" %}</button>
+                    </div>
+
+                    <!-- Display Selected Genres -->
+                    <b>Selected Genres</b>
+                    <div id="selectedGenres" class="form-control" style="min-height: 80px; resize: none; overflow-y: auto;">
+                    </div>
+
+                    <!-- Hidden Input to Store Selected Genres -->
+                    <input type="hidden" name="interests" id="interestsInput" />
+
+                    <input type="submit" value="Sign Up" class="btn rounded but mt-3" />
+                </div>
+            </div>
+        </form>
+        <div class="text-center pb-2" style="color:grey;font-size:13px;">Existing Already? <a href="/user1/signin/"><b>Sign In</b></a></div>
+    </div>
+    <div class="col-sm-4"></div>
+</div>
+
+<script>
+    document.getElementById('addGenreButton').addEventListener('click', function () {
+        const dropdown = document.getElementById('genreDropdown');
+        const selectedGenre = dropdown.value;
+        const selectedGenresDiv = document.getElementById('selectedGenres');
+        const interestsInput = document.getElementById('interestsInput');
+
+        if (selectedGenre && !interestsInput.value.includes(selectedGenre)) {
+            // Add the selected genre to the display div
+            const genreSpan = document.createElement('span');
+            genreSpan.className = 'badge bg-secondary me-1 genre-badge';
+            genreSpan.innerHTML = `
+                ${selectedGenre}
+                <button type="button" class="btn-close btn-close-white ms-1 remove-genre" aria-label="Remove" data-genre="${selectedGenre}"></button>
+            `;
+            selectedGenresDiv.appendChild(genreSpan);
+
+            // Update the hidden input field
+            const currentGenres = interestsInput.value ? interestsInput.value.split(', ') : [];
+            currentGenres.push(selectedGenre);
+            interestsInput.value = currentGenres.join(', ');
+        }
+    });
+
+    document.getElementById('selectedGenres').addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-genre')) {
+            const genreToRemove = e.target.getAttribute('data-genre');
+            const interestsInput = document.getElementById('interestsInput');
+            const currentGenres = interestsInput.value.split(', ');
+
+            // Remove the genre from the hidden input field
+            const updatedGenres = currentGenres.filter(genre => genre !== genreToRemove);
+            interestsInput.value = updatedGenres.join(', ');
+
+            // Remove the badge from the display
+            e.target.parentElement.remove();
+        }
+    });
+</script>
+{% endblock %}

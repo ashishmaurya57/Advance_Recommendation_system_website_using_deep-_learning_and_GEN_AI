@@ -1,0 +1,31 @@
+{% extends 'user/base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{% trans "Recommended Books For You" %}</h2>
+    <div class="row">
+        {% for rec in recommendations %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <img src="/{{rec.ppic}}" class="card-img-top" alt="..." style="height:180px;width:180px;padding:5px;object-fit:contain;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ rec.book.name }}</h5>
+                    <p class="text-muted">{{ rec.book.category.cname }}</p>
+                    <p class="text-success">₹{{ rec.book.disprice }} <small class="text-danger"><del>₹{{ rec.book.tprice }}</del></small></p>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="/user1/viewdetails?msg={{ rec.book.id }}" class="btn btn-sm btn-primary">{% trans "View Details" %}</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                We don't have enough data to make recommendations yet. 
+                Please browse more books and we'll learn your preferences!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

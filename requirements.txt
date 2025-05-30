@@ -1,0 +1,15 @@
+Django>=4.0,<5.0
+numpy>=1.21
+torch>=1.9
+transformers>=4.20
+sentence-transformers>=2.2
+langchain>=0.0.350
+langchain-groq>=0.0.5
+nltk>=3.6
+scikit-learn>=1.0
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.12.0  # required for fuzzywuzzy speedup
+PyMuPDF>=1.20.0
+deep-translator>=1.8.1
+textblob>=0.17.1
+python-dotenv>=0.21.0

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+<style>
+      .but1
+        {
+        color:white;
+        font-size:13px;
+        border-radius:5px;
+        }
+        .but1:hover
+        {
+        background:#ff0099;
+        color:white;
+        text-decoration:underline;
+        transition:all ease 1s;
+        }
+
+</style>
+<div class="row">
+    <div class="h3 text-center pt-2"><b>Cart</b><b style="color:#4e83ab">Items<i class="fa fa-shopping-cart"></i></b></div>
+
+    <div class="col-sm-12 py-2 text-center fontfamily">
+        <table class="table table-stripted "style="font-size:15px;">
+            <tr class="bg-light">
+                <th>{% trans "Product Id" %}</th>
+                <th>{% trans "Picture" %}</th>
+                <th>{% trans "Product Name" %}</th>
+                <th>{% trans "Hardcover" %}</th>
+                <th>{% trans "Total Price" %}</th>
+                <th>{% trans "Discounted Price" %}</th>
+                <th>{% trans "Remove" %}</th>
+                <th>{% trans "Order" %}</th>
+            </tr>
+            {% if cart %}
+            {% for x in cart %}
+            <tr class="fonts text-center m-3"style="font-size:14px;padding-top:10px;">
+                <td class="pt-5">{{x.1}}</td>
+                <td ><img src="/{{x.7}}" class="img-thumbnail" style="max-height:80px"/></td>
+                <td class="pt-5">{{x.6}}</td>
+                <td class="pt-5">{{x.9}}</td>
+                <td class="pt-5"><i class="btn btn-outline-danger"><s>{{x.11}}</s></i></td>
+                <td class="pt-5"><i class="btn btn-outline-success">{{x.12}}</i></td>
+                <td class="pt-5"><a href="/user1/cart?pid={{x.0}}" class="btn rounded but fontfamily"style="font-size:14px;background:#dc3545;">{% trans "Remove Item" %}</a></td>
+                <td class="pt-5"><a href="/user1/process?pid={{x.1}}&bn=orderfromcart" class="btn rounded but fontfamily" style="font-size:14px";>{% trans "Order Now" %}</a></td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </table>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<style>
+      .but
+        {
+        background:#4e83ab;
+        color:white;
+        font-size:13px;
+        border-radius:5px;
+        }
+        .but:hover
+        {
+        background:#859bba;
+        color:white;
+         text-decoration:underline;
+        transition:all ease 1s;
+        }
+
+</style>
+<div class="row" style="min-height:200px;">
+    <div class="h3 text-center"><b>Products</b><b style="color:#4e83ab"><i class="fa fa-product-hunt"></i></b></div>
+    <div class="col-sm-12">
+        <div class="row">
+            <div class="col-sm-3 pt-2">
+                <ul class="list-group">
+                    <li class="list-group-item" style="background:#4e83ab;color:white" aria-current="true">Our Brands</li>
+                    {% if cat %}
+                    {% for x in cat %}
+                    <a href="/user1/products?abc={{x.id}}">
+                        <li class="list-group-item">{{x.cname}}</li>
+                    </a>
+                    {% endfor %}
+                    {% endif %}
+                    <a href="/user1/products/">
+                        <li class="list-group-item">All Brands</li>
+                    </a>
+                </ul>
+            </div>
+            <div class="col-sm-9">
+                <div class="row">
+                    {% if products %}
+                    {% for x in products %}
+                    <div class="col-sm-3 pt-2">
+                        <div class="card w-100">
+                            <img src="/{{x.ppic}}" class="card-img-top" alt="..."
+                                 style="height:180px;width:210px;padding:5px;">
+                            <div class="card-body">
+                                <b class="card-title"style="font-size:15px">{{x.name}}</b>
+                                <p style="color:grey;font-size:14px;">{{x.category}}</p>
+                                <p style="font-size:13px;"><b>Language:</b>{{x.language}}</p>
+                                <b style="font-size:14px;">Rs: </b> <s class="text-danger font">{{x.tprice}}/-</s> <b style="font-size:13px;">{{x.disprice}}/-</b>
+                                <a href="/user1/viewdetails/?msg={{x.id}}" class="btn rounded but">View</a>
+                                <a href="/user1/process?pid={{x.id}}&bn=cart" class="btn rounded but">Add to cart</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

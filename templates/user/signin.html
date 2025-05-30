@@ -1,0 +1,42 @@
+{% extends 'base.html'%}
+{% load static %}
+
+{% block content %}
+<style>
+    .signin
+    {
+    min-height:200px;
+    padding-bottom:20px;
+    }
+     .form-control
+    {
+    margin-bottom:10px;
+    }
+    ::placeholder
+    {
+    font-size:13px;
+    }
+</style>
+<div class="row fontfamily">
+    <div class="h3 text-center"><b>Sign</b><b style="color:#4e83ab">In<i class="fa fa-sign-in"></i></b></div>
+    <div class="col-sm-4 py-2"></div>
+    <div class="col-sm-4 bg-light signin border">
+        <form method="post" enctype="multipart/form-data" style="font-size:13px;">
+            {% csrf_token %}<!--cross site referred-->
+            {% if S %}
+
+            {% endif %}
+            <div class="row ">
+                <div class="col-sm-12 pt-2 ">
+                    <b>Email</b><input type="email" name="email" required class="form-control"
+                                placeholder="Enter your email id.."/>
+                    <b>Password</b><input type="password" name="passwd" required class="form-control"
+                                   placeholder="Enter your Password.."/>
+                    <input type="submit" value="Login" class="btn rounded but"/>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-sm-4"></div>
+</div>
+{% endblock %}
