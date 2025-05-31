@@ -34,6 +34,7 @@ def home(req):
     cdata = category.objects.all().order_by('-id')[:6]
     pdata = product.objects.all().order_by('-id')[:12]
     noofitemsincart = addtocart.objects.filter(userid=req.session.get('userid')).count()
+    # noofitemsincart = addtocart.objects.all().count()
 
     return render(req, 'user/index.html', {
         "data": cdata,
@@ -296,275 +297,15 @@ def async_update_recommendations(user_profile):
     def update():
         recommend_products(user_profile, force_update=True)
     threading.Thread(target=update).start()
-# def recommend_products(user_profile):
-#     print("🔥 recommend_products called")
-#     cache_key = f"recommendations_combined_{user_profile.email}"
-#     cached = cache.get(cache_key)
-#     if cached:
-#         return cached
-
-#     # Step 1: User Interests (for LLM)
-#     user_tags = [tag.name.lower() for tag in user_profile.interests.all()]
-    
-#     user_tags_str = " ".join(user_tags)
-
-#     all_products = product.objects.all()
-#     recommendations_interaction = {}
-
-#     # Step 2: Interaction-based recommendations
-#     for p in all_products:
-#         score = get_interaction_score(user_profile, p)
-#         if score > 1.6:
-#             product_desc = p.pdes.lower()
-#             category_name = p.category.cname.lower()
-#             liked_sentiment = get_sentiment_score(product_desc)
-
-#             for candidate_product in all_products:
-#                 if candidate_product.id == p.id:
-#                     continue
-                
-#                 candidate_desc = candidate_product.pdes.lower()
-#                 candidate_cat = candidate_product.category.cname.lower()
-#                 candidate_sentiment = get_sentiment_score(candidate_desc)
-
-#                 cat_match = 1 if category_name == candidate_cat else 0
-#                 sim_score = get_semantic_similarity(product_desc, candidate_desc)
-#                 # print(f"matching-{cat_match}")
-#                 # print(f"sim_score-{sim_score}")
-#                 # print(f"candidate_Sentimen-{candidate_sentiment}")
-#                 if cat_match and sim_score >= 0.7 and candidate_sentiment >= 0.7:
-#                     combined_score = 0.4 * score + 0.4 * sim_score + 0.2 * candidate_sentiment
-#                     # print(f"combined score-- {combined_score}")
-
-#                     # Keep highest combined score per candidate
-#                     if candidate_product not in recommendations_interaction or recommendations_interaction[candidate_product] < combined_score:
-#                         recommendations_interaction[candidate_product] = combined_score
-
-#     # Add original products with high interaction score (in case they were missed)
-#     for p in all_products:
-#         if get_interaction_score(user_profile, p) > 1.5:
-#             if p not in recommendations_interaction:
-#                 recommendations_interaction[p] = get_interaction_score(user_profile, p)
-
-#     # Step 3: LLM-based recommendation scores
-#     llm_scores = {}
-#     for p in all_products:
-#             # print(f"user_interes: {user_tags}")
-            
-#             result = chain.invoke({
-#                 "user_interests": user_tags,
-#                 "product_description": p.pdes.lower(),
-#                 "category_name": p.category.cname.lower()
-#             })
-
-#             # Safely extract float from LLM output
-#             try:
-#                 score = float(result)
-#             except (ValueError, TypeError):
-#                 import re
-#                 match = re.search(r"[-+]?\d*\.\d+|\d+", str(result))
-#                 if match:
-#                     score = float(match.group())
-#                 else:
-#                     print(f"⚠️ Could not parse score from result: {result}")
-#                     continue  # Skip this product if parsing fails
-
-#             if score >= 0.8:
-#                 llm_scores[p.id] = (p, score)
-
-
-#     # Step 4: Combine interaction and LLM recommendations
-
-#     interaction_products = set(p.id for p in recommendations_interaction.keys())
-#     llm_products = set(llm_scores.keys())
-
-#     intersection_ids = interaction_products & llm_products
-#     llm_only_ids = llm_products - intersection_ids
-#     interaction_only_ids = interaction_products - intersection_ids
-
-#     recommended = []
-
-#     # 1. Books common in both (LLM + interaction) → sorted by LLM score desc
-#     intersection_sorted = sorted(intersection_ids, key=lambda pid: -llm_scores[pid][1])
-#     recommended += [llm_scores[pid][0] for pid in intersection_sorted]
-
-#     # 2. Books with only LLM match → sorted by LLM score desc
-#     llm_only_sorted = sorted(llm_only_ids, key=lambda pid: -llm_scores[pid][1])
-#     recommended += [llm_scores[pid][0] for pid in llm_only_sorted]
-
-#     # 3. Books with only interaction match → sorted by interaction combined score desc
-#     interaction_only_sorted = sorted(interaction_only_ids, key=lambda p: -recommendations_interaction[next(prod for prod in recommendations_interaction if prod.id == p)])
-#     recommended += [next(prod for prod in recommendations_interaction if prod.id == pid) for pid in interaction_only_sorted]
-
-#     # Step 5: Cache and return
-#     cache.set(cache_key, recommended, timeout=1800)
-#     return recommended
-
-# def recommend_products(user_profile):
-#     print("🔥 recommend_products called")
-#     cache_key = f"recommendations_{user_profile.email}"
-#     cached = cache.get(cache_key)
-#     if cached:
-#         return cached
-
-#     all_products = product.objects.all()
-#     interacted_products = []
-    
-#     # Phase 1: Filter by Interaction Score
-#     for p in all_products:
-#         score = get_interaction_score(user_profile, p)
-#         if score >= INTERACTION_THRESHOLD:
-#             interacted_products.append((p, score))
-
-#     print(f"📚 Positively interacted books: {len(interacted_products)}")
-
-#     # Setup LLM prompt
-#     prompt_template = """
-# You are a recommendation engine. Evaluate relevance of another product based on the user's interest and the context of a liked product.
-
-# User Interests: {user_interests}  
-# Liked Product Description: {liked_description}  
-# Liked Category: {liked_category}  
-# Candidate Product Description: {product_description}  
-# Candidate Category: {category_name}  
-
-# Instructions:  
-# 1. Match user interests and the liked product with the candidate product.  
-# 2. Return a float between 0.0 and 1.0 indicating how closely the candidate matches.  
-# 3. No text, just a number.
-# """
-#     prompt = PromptTemplate(
-#         input_variables=["user_interests", "liked_description", "liked_category", "product_description", "category_name"],
-#         template=prompt_template,
-#     )
-#     chain = LLMChain(llm=chatgroq, prompt=prompt)
-
-#     user_tags = [tag.name.lower() for tag in user_profile.interests.all()]
-#     user_tags_str = " ".join(user_tags)
-
-#     final_recommendations = []
-
-#     for liked_product, inter_score in interacted_products:
-#         liked_desc = liked_product.pdes.lower()
-#         liked_category = liked_product.category.cname.lower()
-
-#         for candidate in all_products:
-#             if candidate.id == liked_product.id:
-#                 continue
-
-#             # Match by same category
-#             if candidate.category.cname.lower() != liked_category:
-#                 continue
-
-#             # Match positive sentiment
-#             sentiment = TextBlob(candidate.pdes.lower()).sentiment.polarity
-#             if sentiment < 0.2:
-#                 continue
-
-#             # Text similarity
-#             tfidf = TfidfVectorizer(stop_words="english")
-#             vectors = tfidf.fit_transform([liked_desc, candidate.pdes.lower()])
-#             text_sim = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
-
-#             # LLM Score
-#             try:
-#                 llm_score = float(chain.run(
-#                     user_interests=user_tags_str,
-#                     product_description=candidate.pdes.lower(),
-#                     category_name=candidate.category.cname.lower()
-#                 ).strip())
-#                 llm_score = max(0.0, min(1.0, llm_score))
-#             except:
-#                 llm_score = 0.0
-
-#             final_score = (
-#                 0.4 * llm_score +
-#                 0.3 * text_sim +
-#                 0.2 * ((sentiment + 1) / 2) +
-#                 0.1 * inter_score  # use source product interaction as signal
-#             )
-#             print(final_score)
-
-#             final_recommendations.append((candidate, round(final_score, 3)))
-
-#     # Sort by score
-    
-#     final_recommendations.sort(key=lambda x: x[1], reverse=True)
-#     unique_recommended = []
-#     seen_ids = set()
-#     for book, score in final_recommendations:
-#         if book.id not in seen_ids:
-#             seen_ids.add(book.id)
-#             unique_recommended.append(book)
-
-#     cache.set(cache_key, unique_recommended[:10], timeout=1800)
-#     return unique_recommended[:10]   
-
-# def recommend_products(user_profile):
-#     print("🔥 recommend_products called")
-#     cache_key = f"recommendations_{user_profile.email}"  # Use email instead of id
-#     cached = cache.get(cache_key)
-#     if cached:
-#         return cached
-
-#     user_tags = [tag.name.lower() for tag in user_profile.interests.all()]
-#     print("User tags:", user_tags)  
-#     user_tags_str = " ".join(user_tags)
-#     all_products = product.objects.all()
-#     filtered_products = []
-
-#     # Define LangChain prompt
-#     prompt_template = """
-# You are a recommendation engine. Evaluate the relevance of a product based on the user's interests.
-
-# User Interests: {user_interests}  
-# Product Description: {product_description}  
-# Category: {category_name}  
-
-# Instructions:  
-# 1. Check if any keywords from the user's interests appear in the product description or category.  
-# 2. Check if the overall sentiment and context of the product aligns positively with the user's interests.  
-# 3. If either condition is satisfied, return **only "1"**.  
-# 4. If neither condition is met, return **only "0"**.  
-
-# Respond with a single digit: "1" for relevant, or "0" for not relevant. Do not include any explanation.
-# """
-
-#     prompt = PromptTemplate(
-#         input_variables=["user_interests", "product_description", "category_name"],
-#         template=prompt_template,
-#     )
-#     chain = LLMChain(llm=chatgroq, prompt=prompt)
-
-#     for p in all_products:
-#         product_desc = p.pdes.lower()
-#         category_name = p.category.cname.lower()
-
-#         # Run LLMChain
-#         result = chain.run(
-#             user_interests=user_tags_str,
-#             product_description=product_desc,
-#             category_name=category_name
-#         ).strip()
-
-#         print("LLM result:", result.strip())  # debug output
-
-#         if result == "1":
-#             filtered_products.append(p)
-
-#     filtered_top = filtered_products
-#     cache.set(cache_key, filtered_top, timeout=1800)  # Cache for 30 mins
-#     return filtered_top
-
 
 
 def about(req):
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart =  addtocart.objects.filter(userid=req.session.get('userid')).count()
     return render(req, 'user/about.html', {"noofitemsincart":noofitemsincart})
 
 
 def contactus(request):
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart = addtocart.objects.filter(userid=request.session.get('userid')).count()
     status = False
     if request.method == 'POST':
         Name = request.POST.get("name", "")
@@ -586,7 +327,7 @@ def services(req):
 def myorders(request):
     userid = request.session.get('userid')
     oid = request.GET.get('oid')
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart =  addtocart.objects.filter(userid=request.session.get('userid')).count()
     orderdata = ""
     if userid:
         cursor = connection.cursor()
@@ -597,14 +338,14 @@ def myorders(request):
             result = order.objects.filter(id=oid, userid=userid)
             result.delete()
             return HttpResponse(
-                "<script>alert('your order has been cancelled');window.location.href='/user1/myorders'</script>")
+                "<script>alert('your order has been cancelled');window.location.href='/user1/myorders/'</script>")
 
     return render(request, 'user/myorders.html', {"pendingorder": orderdata ,"noofitemsincart":noofitemsincart})
 
 def myprofile(request):
     user = request.session.get('userid')  # Get the logged-in user's email from the session
     pdata = profile.objects.filter(email=user).first()  # Fetch the user's profile
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart = addtocart.objects.filter(userid=request.session.get('userid')).count()
     print(pdata.email)
     interests_list = []
     # if pdata:
@@ -662,7 +403,7 @@ def myprofile(request):
 
 def prod(request):
     cdata = category.objects.all().order_by('-id')
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart = addtocart.objects.filter(userid=request.session.get('userid')).count()
     x = request.GET.get('abc')
     # pdata=""
     if x is not None:
@@ -673,7 +414,7 @@ def prod(request):
 
 
 def signup(req):
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart = addtocart.objects.filter(userid=req.session.get('userid')).count()
     if req.method == "POST":
         name = req.POST.get("name", "")
         DOB = req.POST.get("dob", "")
@@ -718,7 +459,7 @@ def signup(req):
 
 
 def signin(req):
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart =  addtocart.objects.filter(userid=req.session.get('userid')).count()
     if req.method == 'POST':
         uname = req.POST.get('email', "")
         pwd = req.POST.get('passwd', "")
@@ -767,7 +508,7 @@ def log_rating_interaction(user, product, new_rating, user_profile):
 
 def viewdetails(request):
     user_profile = profile.objects.get(email=request.session['userid'])
-    noofitemsincart = addtocart.objects.all().count()
+    noofitemsincart =addtocart.objects.filter(userid=request.session.get('userid')).count()
     product_id = request.GET.get('msg')
 
     if product_id:
@@ -870,7 +611,7 @@ def cart(request):
 
     userid = request.session['userid']
     user_profile = profile.objects.get(email=userid)
-    noofitemsincart = addtocart.objects.filter(userid=userid).count()
+    noofitemsincart = addtocart.objects.filter(userid=request.session.get('userid')).count()
     cartdata = {}
 
     cursor = connection.cursor()
@@ -900,7 +641,7 @@ def cart(request):
 
         except addtocart.DoesNotExist:
             return HttpResponse("<script>alert('Cart item not found');window.location.href='/user1/cart/'</script>")
-        except Product.DoesNotExist:
+        except product.DoesNotExist:
             return HttpResponse("<script>alert('Product not found');window.location.href='/user1/cart/'</script>")
 
     return render(request, 'user/cart.html', {"cart": cartdata, "noofitemsincart": noofitemsincart})

@@ -47,8 +47,8 @@
                                     <small class="text-muted">Published: {{ product.pdate }}</small>
                                 </p>
                                 <div class="mt-3">
-                                    <a href="/user1/process?pid={{ product.id }}&bn=order" class="btn but">{% trans "Buy Now" %}</a>
-                                    <a href="/user1/process?pid={{ product.id }}&bn=cart" class="btn but">
+                                    <a href="/user1/process/?pid={{ product.id }}&bn=order" class="btn but">{% trans "Buy Now" %}</a>
+                                    <a href="/user1/process/?pid={{ product.id }}&bn=cart" class="btn but">
                                         <i class="fa fa-shopping-cart"></i> Add to Cart
                                     </a>
                                     <button id="readBookBtn" class="btn btn-primary">Read Book</button>
@@ -81,7 +81,7 @@
                                     <i class="fa fa-inr"></i> {{ book.disprice }}
                                     <small class="text-danger"><del>{{ book.tprice }}</del></small>
                                 </p>
-                                <a href="/user1/viewdetails?msg={{ book.id }}" class="btn btn-sm btn-primary">{% trans "View" %}</a>
+                                <a href="/user1/viewdetails/?msg={{ book.id }}" class="btn btn-sm btn-primary">{% trans "View" %}</a>
                             </div>
                         </div>
                     </div>

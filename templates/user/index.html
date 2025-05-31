@@ -162,7 +162,7 @@
                 <b style="font-size:13px;">{{ book.disprice }}/-</b>
                 <div class="mt-2">
                     <a href="/user1/viewdetails/?msg={{ book.id }}" class="btn btn-sm btn-primary">View</a>
-                    <a href="/user1/process?pid={{ book.id }}&bn=cart" class="btn btn-sm btn-outline-secondary">
+                    <a href="/user1/process/?pid={{ book.id }}&bn=cart" class="btn btn-sm btn-outline-secondary">
                         <i class="fa fa-shopping-cart"></i>
                     </a>
                 </div>
@@ -307,7 +307,7 @@ nextBtn.addEventListener('click', () => {
 fetchRecommendations();
 
 // Poll every 15 seconds to check for updated recommendations
-setInterval(fetchRecommendations, 40000);
+setInterval(fetchRecommendations, 30000);
 
 {% endif %}
 </script>

@@ -29,7 +29,7 @@
                     <li class="list-group-item" style="background:#4e83ab;color:white" aria-current="true">Our Brands</li>
                     {% if cat %}
                     {% for x in cat %}
-                    <a href="/user1/products?abc={{x.id}}">
+                    <a href="/user1/products/?abc={{x.id}}">
                         <li class="list-group-item">{{x.cname}}</li>
                     </a>
                     {% endfor %}
@@ -53,7 +53,7 @@
                                 <p style="font-size:13px;"><b>Language:</b>{{x.language}}</p>
                                 <b style="font-size:14px;">Rs: </b> <s class="text-danger font">{{x.tprice}}/-</s> <b style="font-size:13px;">{{x.disprice}}/-</b>
                                 <a href="/user1/viewdetails/?msg={{x.id}}" class="btn rounded but">View</a>
-                                <a href="/user1/process?pid={{x.id}}&bn=cart" class="btn rounded but">Add to cart</a>
+                                <a href="/user1/process/?pid={{x.id}}&bn=cart" class="btn rounded but">Add to cart</a>
                             </div>
                         </div>
                     </div>

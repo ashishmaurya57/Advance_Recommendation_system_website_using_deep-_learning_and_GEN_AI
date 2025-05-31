@@ -14,7 +14,7 @@
                     <p class="text-success">₹{{ rec.book.disprice }} <small class="text-danger"><del>₹{{ rec.book.tprice }}</del></small></p>
                 </div>
                 <div class="card-footer bg-white">
-                    <a href="/user1/viewdetails?msg={{ rec.book.id }}" class="btn btn-sm btn-primary">{% trans "View Details" %}</a>
+                    <a href="/user1/viewdetails/?msg={{ rec.book.id }}" class="btn btn-sm btn-primary">{% trans "View Details" %}</a>
                 </div>
             </div>
         </div>
