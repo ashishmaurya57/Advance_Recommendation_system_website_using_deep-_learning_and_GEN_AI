@@ -63,8 +63,10 @@ class product(models.Model):
     category = models.ForeignKey(category, on_delete=models.CASCADE)
     pdate = models.DateField()
     pdf = models.FileField(upload_to='static/pdfs/', null=True, blank=True, help_text="Upload a PDF file for the product")
-    likes = models.IntegerField(default=0)  # Total likes
-    dislikes = models.IntegerField(default=0)  # Total dislikes
+    likes = models.PositiveIntegerField(default=0)
+    dislikes = models.PositiveIntegerField(default=0)
+    liked_users = models.ManyToManyField(profile, related_name='liked_products', blank=True)
+    disliked_users = models.ManyToManyField(profile, related_name='disliked_products', blank=True)
     tags = models.ManyToManyField('InterestTag', blank=True)
 
 
@@ -117,9 +119,11 @@ from django.utils import timezone
 class UserInteraction(models.Model):
     INTERACTION_CHOICES = (
         ('view', 'View'),
-        ('click', 'Click'),
-        ('rating', 'Rating'),
-        ('add_to_cart', 'Add to Cart'),
+    ('click', 'Click'),
+    ('rating', 'Rating'),
+    ('add_to_cart', 'Add to Cart'),
+    ('like', 'Like'),       # ✅ Add
+    ('dislike', 'Dislike'),
     )
 
     user = models.ForeignKey('profile', on_delete=models.CASCADE)

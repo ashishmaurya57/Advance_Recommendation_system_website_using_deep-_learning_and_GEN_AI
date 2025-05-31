@@ -112,7 +112,7 @@ def get_interaction_score(user_profile, p):
     score = (
         0.2 * min(views, 10)+        # Up to 0.3
         0.1 * min(clicks, 10)+         # Up to 0.2
-        0.5 * min(add_to_cart, 2) +    # Up to 0.2
+        2.0 * min(add_to_cart, 2) +    # Up to 0.2
         0.4 * rating_score                 # Up to 0.3
     )
 
@@ -123,7 +123,6 @@ def get_interaction_score(user_profile, p):
     return round(score, 2)
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-
 prompt = PromptTemplate(
     input_variables=["user_interests", "product_description", "category_name"],
     template="""
@@ -136,15 +135,18 @@ Input:
 
 Instructions:
 1. Treat 'user_interests' as a list of keyword phrases.
-2. Process each interest **one at a time**, in order.
-   a. Compare it with product_description and category_name.
-   b. Match based on keyword overlap and sentiment/contextual alignment.
-   c. Calculate a relevance score between 0.0 (not relevant) and 1.0 (highly relevant).
-3. If any interest yields a score **greater than or equal to 0.8**, immediately return that score and stop further checks.
-4. If none reach that threshold, return the **highest score** found.
-5. **Important: Return only the score as a float. No explanation, no extra text. Example: 0.75**
+2. Process each interest **one at a time**, in order:
+   a. Check if the interest **is a substring** of the category (e.g., "action" matches "action & adventure"). If it is, count it as a strong match.
+   b. Also compare the interest with product_description for context/sentiment alignment.
+3. If **category_name contains** the interest word as a substring, add **0.8** to relevance.
+4. If **product_description** also strongly aligns with the interest, boost relevance up to **1.0**.
+5. If any interest yields a score **greater than or equal to 0.8**, immediately return that score and stop further checks.
+6. If none reach that threshold, return the **highest score** found.
+7. **Important: Return only the score as a float. No explanation, no extra text. Example: 0.75**
 """
 )
+
+
 
 
 chain = LLMChain(llm=chatgroq, prompt=prompt)
@@ -165,8 +167,9 @@ def recommend_products(user_profile, force_update=False):
     print("🔥 recommend_products called")
     cache_key = f"recommendations_combined_{user_profile.email}"
     cached = cache.get(cache_key)
-    if cached and not force_update:
+    if cached and force_update==False:
         # Return cached recommendations immediately
+        print(f"cched")
         return cached
 
     user_tags = [tag.name.lower() for tag in user_profile.interests.all()]
@@ -244,8 +247,8 @@ def recommend_products(user_profile, force_update=False):
 
                 cat_match = 1 if category_name == candidate_cat else 0
                 sim_score = get_semantic_similarity(product_desc, candidate_desc)
-
-                if cat_match and sim_score >= 0.7 and candidate_sentiment >= 0.7:
+                
+                if cat_match and sim_score >= 0.7:
                     combined_score = 0.4 * score + 0.4 * sim_score + 0.2 * candidate_sentiment
 
                     if candidate_product not in recommendations_interaction or recommendations_interaction[candidate_product] < combined_score:
@@ -284,6 +287,7 @@ def recommend_products(user_profile, force_update=False):
     recommended += [next(prod for prod in recommendations_interaction if prod.id == pid) for pid in interaction_only_sorted]
 
     # Cache results for 30 minutes
+    print(recommended)
     cache.set(cache_key, recommended, timeout=1800)
     return recommended
 import threading
@@ -748,7 +752,7 @@ def log_interaction(user, product, interaction_type,user_profile):
 
 def log_rating_interaction(user, product, new_rating, user_profile):
     # user_profile = profile.objects.get(email=request.session['userid'])
-    async_update_recommendations(user_profile)
+   
     interaction, created = UserInteraction.objects.get_or_create(
         user=user,
         product=product,
@@ -762,6 +766,7 @@ def log_rating_interaction(user, product, new_rating, user_profile):
  # or wherever you place those functions
 
 def viewdetails(request):
+    user_profile = profile.objects.get(email=request.session['userid'])
     noofitemsincart = addtocart.objects.all().count()
     product_id = request.GET.get('msg')
 
@@ -778,6 +783,7 @@ def viewdetails(request):
     if request.session.get('userid'):
         user = profile.objects.get(email=request.session['userid'])
         log_interaction(user, product_obj, 'view', user)
+        async_update_recommendations(user_profile)
 
     if request.method == "POST":
         if request.session.get('userid'):
@@ -788,9 +794,10 @@ def viewdetails(request):
             Review.objects.create(product=product_obj, user=user, rating=rating, comment=comment)
 
             log_rating_interaction(user, product_obj, rating, user)
+            async_update_recommendations(user_profile)
 
             return HttpResponse(
-                f"<script>alert('Your review has been submitted successfully.');window.location.href='/user1/viewdetails?msg={product_id}/';</script>"
+                f"<script>alert('Your review has been submitted successfully.');window.location.href='/user1/viewdetails/?msg={product_id}/';</script>"
             )
         else:
             return HttpResponse(
@@ -809,7 +816,6 @@ def viewdetails(request):
         'original_language': original_language,
     })
 # from .utils import log_interaction
-
 def process(request):
     userid = request.session.get('userid')
     pid = request.GET.get('pid')
@@ -820,55 +826,84 @@ def process(request):
         user = profile.objects.get(email=userid)
         prod = product.objects.get(id=pid)
 
-        log_interaction(user, prod, 'click', user)  # Track click
+        log_interaction(user, prod, 'add_to_cart', user)  # Track click
 
         if btn == 'cart':
             checkcartitem = addtocart.objects.filter(pid=pid, userid=userid)
             if checkcartitem.count() == 0:
                 addtocart(pid=pid, userid=userid, status=True, cdate=datetime.datetime.now()).save()
-            else:
-                return HttpResponse(
-                    "<script>alert('Your item is successfully added to cart..');window.location.href='/user1/cart/'</script>")
+            return HttpResponse(
+                "<script>alert('Your item is successfully added to cart.');window.location.href='/user1/cart/'</script>")
 
         elif btn == 'order':
             order(pid=pid, userid=userid, remarks="pending", status=True, odate=datetime.datetime.now()).save()
             return HttpResponse(
-                "<script>alert('your order has confirmed...');window.location.href='/user1/myorders/'</script>")
+                "<script>alert('Your order has been confirmed.');window.location.href='/user1/myorders/'</script>")
 
         elif btn == 'orderfromcart':
             res = addtocart.objects.filter(pid=pid, userid=userid)
             res.delete()
             order(pid=pid, userid=userid, remarks="pending", status=True, odate=datetime.datetime.now()).save()
             return HttpResponse(
-                "<script>alert('your order has confirmed...');window.location.href='/user1/myorders/'</script>")
+                "<script>alert('Your order has been confirmed.');window.location.href='/user1/myorders/'</script>")
 
-        return render(request, 'user/process.html', {"alreadylogin": True})
     else:
         return HttpResponse("<script>window.location.href='/user1/signin/'</script>")
-
 
 def logout(request):
     del request.session['userid']
     # return render(request,'user/logout.html')
     return HttpResponse("<script>window.location.href='/user1/home/'</script>")
 
+# dfrom .models import addtocart, profile, UserInteraction, product as Product  # avoid naming conflict
+
+def remove_add_to_cart_interaction(user_profile, product):
+    UserInteraction.objects.filter(
+        user=user_profile,
+        product=product,
+        interaction_type='add_to_cart'
+    ).delete()
 
 def cart(request):
-    noofitemsincart = addtocart.objects.all().count()
-    cartdata={}
-    if request.session.get('userid'):
-        userid = request.session.get('userid')
-        cursor = connection.cursor()
-        cursor.execute("select c.*,p.* from user_addtocart c,user_product p where p.id=c.pid")
-        cartdata = cursor.fetchall()
-        pid = request.GET.get('pid')
-        if request.GET.get('pid'):
-            res = addtocart.objects.filter(id=pid, userid=userid)
-            res.delete()
-            return HttpResponse(
-                "<script>alert('Your product has been removed successfully');window.location.href='/user1/cart/'</script>")
+    if not request.session.get('userid'):
+        return redirect('signin')
 
-    return render(request, 'user/cart.html',{"cart":cartdata,"noofitemsincart":noofitemsincart})
+    userid = request.session['userid']
+    user_profile = profile.objects.get(email=userid)
+    noofitemsincart = addtocart.objects.filter(userid=userid).count()
+    cartdata = {}
+
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT c.id, c.pid, p.* FROM user_addtocart c JOIN user_product p ON p.id = c.pid WHERE c.userid = %s",
+        [userid]
+    )
+    cartdata = cursor.fetchall()
+
+    cart_id = request.GET.get('cartid')
+    if cart_id:
+        try:
+            # Get the cart entry and associated product
+            cart_entry = addtocart.objects.get(id=cart_id, userid=userid)
+            product_obj = product.objects.get(id=cart_entry.pid)
+
+            # Remove cart entry
+            cart_entry.delete()
+
+            # Remove the 'add_to_cart' interaction
+            remove_add_to_cart_interaction(user_profile, product_obj)
+            async_update_recommendations(user_profile)
+
+            return HttpResponse(
+                "<script>alert('Your product has been removed successfully');window.location.href='/user1/cart/'</script>"
+            )
+
+        except addtocart.DoesNotExist:
+            return HttpResponse("<script>alert('Cart item not found');window.location.href='/user1/cart/'</script>")
+        except Product.DoesNotExist:
+            return HttpResponse("<script>alert('Product not found');window.location.href='/user1/cart/'</script>")
+
+    return render(request, 'user/cart.html', {"cart": cartdata, "noofitemsincart": noofitemsincart})
 
 
 from collections import Counter

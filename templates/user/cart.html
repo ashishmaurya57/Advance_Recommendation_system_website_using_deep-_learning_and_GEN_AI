@@ -42,7 +42,10 @@
                 <td class="pt-5">{{x.9}}</td>
                 <td class="pt-5"><i class="btn btn-outline-danger"><s>{{x.11}}</s></i></td>
                 <td class="pt-5"><i class="btn btn-outline-success">{{x.12}}</i></td>
-                <td class="pt-5"><a href="/user1/cart?pid={{x.0}}" class="btn rounded but fontfamily"style="font-size:14px;background:#dc3545;">{% trans "Remove Item" %}</a></td>
+                <td class="pt-5">
+  <a href="/user1/cart/?cartid={{x.0}}" class="btn rounded but fontfamily" style="font-size:14px;background:#dc3545;">Remove Item</a>
+</td>
+
                 <td class="pt-5"><a href="/user1/process?pid={{x.1}}&bn=orderfromcart" class="btn rounded but fontfamily" style="font-size:14px";>{% trans "Order Now" %}</a></td>
             </tr>
             {% endfor %}
