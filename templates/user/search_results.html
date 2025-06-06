@@ -17,8 +17,10 @@
                         <p style="color:grey;font-size:14px;">{{ product.category }}</p>
                         <p style="font-size:13px;"><b>Language:</b> {{ product.language }}</p>
                         <b style="font-size:14px;">Rs: </b> <s class="text-danger font">{{ product.tprice }} /-</s> <b style="font-size:13px;">{{ product.disprice }} /-</b>
-                        <a href="/user1/viewdetails/?msg={{ product.id }}" class="btn rounded but">{% trans "Buy Now" %}</a>
-                        <a href="/user1/process/?pid={{ product.id }}&bn=cart" class="btn rounded but">{% trans "Add to Cart" %}</a>
+                        <a href="/user1/viewdetails/?msg={{product.id}}" class="btn btn-sm btn-primary">View</a>
+                        <a href="/user1/process/?pid={{product.id}}&bn=cart" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa fa-shopping-cart"></i>
+                        </a>
                     </div>
                 </div>
             </div>

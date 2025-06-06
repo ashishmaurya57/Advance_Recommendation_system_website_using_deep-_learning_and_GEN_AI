@@ -24,11 +24,12 @@
     <div class="col-sm-12 py-2 text-center fontfamily">
         <table class="table table-stripted "style="font-size:15px;">
             <tr class="bg-light">
-                <th>{% trans "Product Id" %}</th>
-                <th>{% trans "Picture" %}</th>
-                <th>{% trans "Product Name" %}</th>
-                <th>{% trans "Hardcover" %}</th>
-                <th>{% trans "Total Price" %}</th>
+                
+                <th>{% trans "Book Name" %}</th>
+                <th>{% trans "Book Image" %}</th>
+                <th>{% trans "Published Date" %}</th>
+                <th>{% trans "Price" %}</th>
+
                 <th>{% trans "Discounted Price" %}</th>
                 <th>{% trans "Remove" %}</th>
                 <th>{% trans "Order" %}</th>
@@ -36,17 +37,22 @@
             {% if cart %}
             {% for x in cart %}
             <tr class="fonts text-center m-3"style="font-size:14px;padding-top:10px;">
-                <td class="pt-5">{{x.1}}</td>
-                <td ><img src="/{{x.7}}" class="img-thumbnail" style="max-height:80px"/></td>
-                <td class="pt-5">{{x.6}}</td>
-                <td class="pt-5">{{x.9}}</td>
-                <td class="pt-5"><i class="btn btn-outline-danger"><s>{{x.11}}</s></i></td>
-                <td class="pt-5"><i class="btn btn-outline-success">{{x.12}}</i></td>
+                <td class="pt-5"><b>{{x.3}}<b></td>
+                <td ><img src="/{{x.4}}" class="img-thumbnail" style="max-height:80px"/></td>
+                <td class="pt-5">{{x.11}}</td>
+                <!-- <td class="pt-5">{{x.12}}</td> -->
+                <td class="pt-5"><i class="btn btn-outline-danger"><s>{{x.8}}</s></i></td>
+                <td class="pt-5"><i class="btn btn-outline-success">{{x.9}}</i></td>
                 <td class="pt-5">
   <a href="/user1/cart/?cartid={{x.0}}" class="btn rounded but fontfamily" style="font-size:14px;background:#dc3545;">Remove Item</a>
 </td>
 
-                <td class="pt-5"><a href="/user1/process/?pid={{x.1}}&bn=orderfromcart" class="btn rounded but fontfamily" style="font-size:14px";>{% trans "Order Now" %}</a></td>
+                {% if x.1 %}
+  <td><a href="{% url 'start_payment' x.1 %}" class="btn btn-success">Order</a></td>
+{% else %}
+  <td><button class="btn btn-secondary" disabled>Order</button></td>
+{% endif %}
+
             </tr>
             {% endfor %}
             {% endif %}

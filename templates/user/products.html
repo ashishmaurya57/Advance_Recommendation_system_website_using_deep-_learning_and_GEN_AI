@@ -18,25 +18,53 @@
          text-decoration:underline;
         transition:all ease 1s;
         }
+        .category-link {
+        display: block; /* Makes the link fill the li */
+        padding: 8px 16px; /* Optional: for better click area */
+        color: inherit; /* Inherit text color */
+        text-decoration: none; /* Remove underline */
+        border-radius: 4px; /* Optional: rounded corners */
+        transition: background-color 0.2s;
+       }
+
+    .category-link:hover,
+    .category-link:focus,
+    .category-link:active {
+        background-color: #d1e7fd; /* Your desired highlight color */
+        color: #0d6efd; /* Optional: change text color on active */
+    }
+    .active-category, .active-category .category-link {
+        background-color: #d1e7fd !important;
+        color: #0d6efd !important;
+    }
 
 </style>
 <div class="row" style="min-height:200px;">
-    <div class="h3 text-center"><b>Products</b><b style="color:#4e83ab"><i class="fa fa-product-hunt"></i></b></div>
+    <div class="h3 text-center">
+        <b>
+            {% if selected_category_name %}
+                {{ selected_category_name }}
+            {% else %}
+                Products
+            {% endif %}
+        </b>
+        <b style="color:#4e83ab"></b>
+    </div>
     <div class="col-sm-12">
         <div class="row">
             <div class="col-sm-3 pt-2">
                 <ul class="list-group">
-                    <li class="list-group-item" style="background:#4e83ab;color:white" aria-current="true">Our Brands</li>
+                    <li class="list-group-item" style="background:#4e83ab;color:white" aria-current="true">All Categories</li>
                     {% if cat %}
                     {% for x in cat %}
-                    <a href="/user1/products/?abc={{x.id}}">
-                        <li class="list-group-item">{{x.cname}}</li>
-                    </a>
+                    <li class="list-group-item {% if selected_category == x.id|stringformat:'s' %}active-category{% endif %}">
+                        <a href="/user1/products/?abc={{x.id}}" class="category-link">{{x.cname}}</a>
+                    </li>
                     {% endfor %}
                     {% endif %}
-                    <a href="/user1/products/">
-                        <li class="list-group-item">All Brands</li>
-                    </a>
+                    <li class="list-group-item {% if not selected_category %}active-category{% endif %}">
+                        <a href="/user1/products/" class="category-link">All Books</a>
+                    </li>
                 </ul>
             </div>
             <div class="col-sm-9">

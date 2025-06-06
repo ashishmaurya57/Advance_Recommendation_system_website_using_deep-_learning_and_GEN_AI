@@ -33,14 +33,7 @@
                                     </span>
                                 </div>
                                 <div class="my-2">
-                                    <span class="btn {% if user_has_liked %}btn-success{% else %}btn-outline-success{% endif %}" 
-                                          onclick="handleInteraction('like', {{ product.id }})">
-                                        <i class="fa fa-thumbs-up"></i> {{ product.likes }}
-                                    </span>
-                                    <span class="btn {% if user_has_disliked %}btn-danger{% else %}btn-outline-danger{% endif %}" 
-                                          onclick="handleInteraction('dislike', {{ product.id }})">
-                                        <i class="fa fa-thumbs-down"></i> {{ product.dislikes }}
-                                    </span>
+                                    
                                 </div>
                                 <p class="card-text"><b>Description: </b> {{ product.pdes }}</p>
                                 <p class="card-text">
@@ -104,14 +97,16 @@
                                 <div class="review mb-3 border-bottom pb-3">
                                     <div class="d-flex justify-content-between">
                                         <strong>{{ review.user.name }}</strong>
+                                        <!-- <strong>{{review.rating}}</strong> -->
                                         <div>
                                             {% for i in "12345" %}
-                                                {% if forloop.counter <= review.rating %}
-                                                    <i class="fas fa-star text-warning"></i>
-                                                {% else %}
-                                                    <i class="far fa-star text-warning"></i>
-                                                {% endif %}
-                                            {% endfor %}
+    {% if forloop.counter <= review.rating|add:"0" %}
+        <span style="color: gold; font-size: 1.2rem;">&#9733;</span>  {# ★ Filled star #}
+    {% else %}
+        <span style="color: gold; font-size: 1.2rem;">&#9734;</span>  {# ☆ Empty star #}
+    {% endif %}
+{% endfor %}
+
                                         </div>
                                     </div>
                                     <p class="mb-1"><small>{{ review.created_at|date:"F d, Y" }}</small></p>

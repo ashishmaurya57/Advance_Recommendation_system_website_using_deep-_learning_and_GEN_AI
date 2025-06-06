@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h2>Checkout for: {{ product.cname }}</h2>
+<p>Price: ₹{{ product.tprice }}</p>
+
+<form id="payment-form" method="POST" action="{{ callback_url }}">
+  {% csrf_token %}
+  <script
+      src="https://checkout.razorpay.com/v1/checkout.js"
+      data-key="{{ razorpay_merchant_key }}"
+      data-amount="{{ amount }}"
+      data-currency="{{ currency }}"
+      data-order_id="{{ razorpay_order_id }}"
+      data-buttontext="Pay with Razorpay"
+      data-name="BookTown-A site with advance recommendations system"
+      data-description="{{ product.cname }}"
+      data-theme.color="#F37254">
+  </script>
+  <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+  <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+  <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+</form>
+
+<script>
+  var options = {
+    "key": "{{ razorpay_merchant_key }}",
+    "amount": "{{ amount }}",
+    "currency": "{{ currency }}",
+    "name": "BookTown-A site with advance recommendations system",
+    "description": "{{ product.cname }}",
+    "order_id": "{{ razorpay_order_id }}",
+    "handler": function (response){
+        // On successful payment, submit hidden form with razorpay response
+        document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+        document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+        document.getElementById('razorpay_signature').value = response.razorpay_signature;
+        document.getElementById('payment-form').submit();
+    },
+    "theme": {
+      "color": "#F37254"
+    }
+  };
+  var rzp1 = new Razorpay(options);
+  window.onload = function(){
+    rzp1.open();
+  }
+</script>
+{% endblock %}

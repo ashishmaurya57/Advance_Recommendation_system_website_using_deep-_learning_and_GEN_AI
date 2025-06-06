@@ -8,6 +8,7 @@ admin.site.register(contact, contactAdmin)
 
 class categoryAdmin(admin.ModelAdmin):
     list_display = ("id", "cname", "cpic", "cdate")
+    list_display_links = ("cname",) 
 admin.site.register(category, categoryAdmin)
 
 @admin.register(InterestTag)
@@ -25,11 +26,13 @@ admin.site.register(profile, profileAdmin)
 
 class productAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "ppic", "language", "hardcover", "publisher", "tprice", "disprice", "pdes", "category", "pdate", "pdf_link")
+    list_display_links = ("name",)
     list_filter = ("category", "pdate")
     search_fields = ("name", "category__cname", "language", "publisher")
 
     def pdf_link(self, obj):
         if obj.pdf:
+            from django.utils.html import format_html
             return format_html('<a href="{}" target="_blank">View PDF</a>', obj.pdf.url)
         return "No PDF"
     pdf_link.short_description = "PDF File"

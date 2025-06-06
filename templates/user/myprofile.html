@@ -45,7 +45,12 @@
                                 <p><b>Mobile No: </b> {{ profile.mobile }}</p>
                                 <p><b>Email id: </b> {{ profile.email }}</p>
                                 <p><b>Current Address: </b> {{ profile.address }}</p>
-                                <p><b>Interests: </b> {{ profile.interests }}</p>
+                                <p><b>Interests: </b> 
+    {% for interest in profile.interests.all %}
+        {{ interest.name }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+</p>
+
                             </div>
                         </div>
                     </div>
@@ -78,12 +83,15 @@
                                     <option value="" disabled selected>Select a Genre</option>
                                     <option value="Fiction">Fiction</option>
                                     <option value="Non-Fiction">Non-Fiction</option>
-                                    <option value="Mystery">Mystery</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Coding">Coding</option>
+                                    <option value="AI & ML">AI & ML</option>
                                     <option value="Romance">Romance</option>
                                     <option value="Science Fiction">Science Fiction</option>
                                     <option value="Fantasy">Fantasy</option>
                                     <option value="Biography">Biography</option>
-                                    <option value="Self-Help">Self-Help</option>
+                                    <option value="Children and teens">Children and teens</option>
+                                    <option value="Body and mind">Body and mind</option>
                                     <option value="History">History</option>
                                     <option value="Thriller">Thriller</option>
                                 </select>
@@ -102,7 +110,8 @@
                             </div>
 
                             <!-- Hidden Input to Store Selected Genres -->
-                            <input type="hidden" name="interests" id="interestsInput" value="{{ profile.interests }}" />
+                            <input type="hidden" name="interests" id="interestsInput" value="{{ interests_list|join:", " }}" />
+
 
                             <input type="submit" value="Update" class="btn rounded but mt-3"/>
                         </div>
@@ -118,42 +127,51 @@
 </div>
 
 <script>
+    const MAX_GENRES = 5;
+
     document.getElementById('addGenreButton').addEventListener('click', function () {
         const dropdown = document.getElementById('genreDropdown');
         const selectedGenre = dropdown.value;
         const selectedGenresDiv = document.getElementById('selectedGenres');
         const interestsInput = document.getElementById('interestsInput');
 
-        if (selectedGenre && !interestsInput.value.includes(selectedGenre)) {
-            // Add the selected genre to the display div
-            const genreSpan = document.createElement('span');
-            genreSpan.className = 'badge bg-secondary me-1 genre-badge';
-            genreSpan.innerHTML = `
-                ${selectedGenre}
-                <button type="button" class="btn-close btn-close-white ms-1 remove-genre" aria-label="Remove" data-genre="${selectedGenre}"></button>
-            `;
-            selectedGenresDiv.appendChild(genreSpan);
+        if (!selectedGenre || interestsInput.value.includes(selectedGenre)) return;
 
-            // Update the hidden input field
-            const currentGenres = interestsInput.value ? interestsInput.value.split(', ') : [];
-            currentGenres.push(selectedGenre);
-            interestsInput.value = currentGenres.join(', ');
+        let currentGenres = interestsInput.value ? interestsInput.value.split(', ') : [];
+
+        // If max reached, remove the oldest from UI and input
+        if (currentGenres.length >= MAX_GENRES) {
+            const firstBadge = selectedGenresDiv.querySelector('.genre-badge');
+            if (firstBadge) {
+                const genreToRemove = firstBadge.textContent.trim();
+                currentGenres = currentGenres.filter(g => g !== genreToRemove);
+                firstBadge.remove();
+            }
         }
+
+        // Add new badge
+        const genreSpan = document.createElement('span');
+        genreSpan.className = 'badge bg-secondary me-1 genre-badge';
+        genreSpan.innerHTML = `
+            ${selectedGenre}
+            <button type="button" class="btn-close btn-close-white ms-1 remove-genre" aria-label="Remove" data-genre="${selectedGenre}"></button>
+        `;
+        selectedGenresDiv.appendChild(genreSpan);
+
+        currentGenres.push(selectedGenre);
+        interestsInput.value = currentGenres.join(', ');
     });
 
     document.getElementById('selectedGenres').addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-genre')) {
             const genreToRemove = e.target.getAttribute('data-genre');
             const interestsInput = document.getElementById('interestsInput');
-            const currentGenres = interestsInput.value.split(', ');
-
-            // Remove the genre from the hidden input field
-            const updatedGenres = currentGenres.filter(genre => genre !== genreToRemove);
-            interestsInput.value = updatedGenres.join(', ');
-
-            // Remove the badge from the display
+            let currentGenres = interestsInput.value.split(', ');
+            currentGenres = currentGenres.filter(genre => genre !== genreToRemove);
+            interestsInput.value = currentGenres.join(', ');
             e.target.parentElement.remove();
         }
     });
 </script>
+
 {% endblock %}

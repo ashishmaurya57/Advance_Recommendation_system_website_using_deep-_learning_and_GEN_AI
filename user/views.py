@@ -25,13 +25,14 @@ from django.shortcuts import render
 from .models import category, product, addtocart, profile
 import os
 from dotenv import load_dotenv
+from .ml_models import sentiment_analyzer, semantic_model, chatgroq
 load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
-chatgroq = ChatGroq(api_key=api_key, model="llama3-70b-8192", temperature=0.5)
+# chatgroq = ChatGroq(api_key=api_key, model="llama3-70b-8192", temperature=0.5)
 
 
 def home(req):
-    cdata = category.objects.all().order_by('-id')[:6]
+    cdata = category.objects.all().order_by('-id')
     pdata = product.objects.all().order_by('-id')[:12]
     noofitemsincart = addtocart.objects.filter(userid=req.session.get('userid')).count()
     # noofitemsincart = addtocart.objects.all().count()
@@ -71,11 +72,8 @@ def get_recommendations_api(req):
 INTERACTION_THRESHOLD = 0.2
 
 from transformers import pipeline
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import util
 
-# Load models once (do this at the start of your app)
-sentiment_analyzer = pipeline("sentiment-analysis")
-semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def get_sentiment_score(text):
     """
@@ -291,6 +289,7 @@ def recommend_products(user_profile, force_update=False):
     print(recommended)
     cache.set(cache_key, recommended, timeout=1800)
     return recommended
+
 import threading
 from django.core.cache import cache
 def async_update_recommendations(user_profile):
@@ -315,7 +314,7 @@ def contactus(request):
         x = contact(name=Name, email=Email, mobile=Mobile, message=Message)
         x.save()
         status = True
-        # return HttpResponse("<script>alert('Thanks for enquiry...');window.location.href='/user/contactus/'</script>")
+        return HttpResponse("<script>alert('Thanks for enquiry...');window.location.href='/user/contactus/'</script>")
 
     return render(request, 'user/contactus.html', {'S': status,"noofitemsincart":noofitemsincart})
 
@@ -341,59 +340,62 @@ def myorders(request):
                 "<script>alert('your order has been cancelled');window.location.href='/user1/myorders/'</script>")
 
     return render(request, 'user/myorders.html', {"pendingorder": orderdata ,"noofitemsincart":noofitemsincart})
+from django.db.models import F
 
 def myprofile(request):
-    user = request.session.get('userid')  # Get the logged-in user's email from the session
-    pdata = profile.objects.filter(email=user).first()  # Fetch the user's profile
-    noofitemsincart = addtocart.objects.filter(userid=request.session.get('userid')).count()
-    print(pdata.email)
-    interests_list = []
-    # if pdata:
-    #     # Split the interests field into a list
-    #     # interests_list = pdata.interests.split(', ') if pdata.interests else []
-    # else:
-    #     interests_list = []
+    user = request.session.get('userid')
+    pdata = profile.objects.filter(email=user).first()
+    noofitemsincart = addtocart.objects.filter(userid=user).count()
+    userid = request.session['userid']
+    user_profile = profile.objects.get(email=userid)
+    interests_list = list(pdata.interests.values_list('name', flat=True)) if pdata else []
 
-    if user:
-        if request.method == 'POST':
-            # Get form data
-            name = request.POST.get("name", "")
-            DOB = request.POST.get("dob", "").strip()  # Get and strip the DOB field
-            mobile = request.POST.get("mobile", "")
-            password = request.POST.get("passwd", "")
-            address = request.POST.get("address", "")
-            selected_genres = request.POST.get("interests", "")  # Get the comma-separated genres
+    if user and request.method == 'POST':
+                name = request.POST.get("name", "")
+                DOB = request.POST.get("dob", "").strip()
+                mobile = request.POST.get("mobile", "")
+                password = request.POST.get("passwd", "")
+                address = request.POST.get("address", "")
+                selected_genres = request.POST.get("interests", "")  # e.g., "Fiction, Romance"
 
-            # Validate DOB
-            if DOB:
-                try:
-                    # Ensure the DOB is in the correct format
-                    datetime.datetime.strptime(DOB, "%Y-%m-%d")
-                    pdata.dob = DOB
-                except ValueError:
-                    return HttpResponse(
-                        "<script>alert('Invalid date format. Please use YYYY-MM-DD.');window.location.href='/user1/myprofile/';</script>"
-                    )
-            else:
-                pdata.dob = None  # Set to None if DOB is empty
+                if DOB:
+                    try:
+                        pdata.dob = datetime.datetime.strptime(DOB, "%Y-%m-%d").date()
+                    except ValueError:
+                        return HttpResponse("<script>alert('Invalid date format. Please use YYYY-MM-DD.');window.location.href='/user1/myprofile/';</script>")
+                else:
+                    pdata.dob = None
 
-            # Update profile fields
-            pdata.name = name
-            pdata.mobile = mobile
-            pdata.passwd = password
-            pdata.address = address
-            pdata.interests = selected_genres  # Save the updated interests
+                # Update profile fields
+                pdata.name = name
+                pdata.mobile = mobile
+                pdata.passwd = password
+                pdata.address = address
 
-            # Update profile picture if provided
-            if 'ppic' in request.FILES:
-                pdata.ppic = request.FILES['ppic']
+                if 'ppic' in request.FILES:
+                    pdata.ppic = request.FILES['ppic']
 
-            # Save the updated profile
-            pdata.save()
+                pdata.save()
 
-            return HttpResponse(
-                "<script>alert('Your profile updated successfully..');window.location.href='/user1/myprofile/'</script>"
-            )
+                # ✅ Genre handling
+                genre_names = [g.strip() for g in selected_genres.split(',') if g.strip()]
+
+                # Apply the max limit rule
+                MAX_GENRES = 5
+                if len(genre_names) > MAX_GENRES:
+                    genre_names = genre_names[-MAX_GENRES:]  # Keep latest N genres only
+
+                # Get or create InterestTag objects
+                new_tags = [InterestTag.objects.get_or_create(name=g)[0] for g in genre_names]
+
+                # Set new genres directly
+                pdata.interests.set(new_tags)
+
+                return HttpResponse(
+                    "<script>alert('Your profile updated successfully..');window.location.href='/user1/myprofile/'</script>"
+                )
+
+    async_update_recommendations(user_profile)
 
     return render(request, 'user/myprofile.html', {
         "profile": pdata,
@@ -405,12 +407,25 @@ def prod(request):
     cdata = category.objects.all().order_by('-id')
     noofitemsincart = addtocart.objects.filter(userid=request.session.get('userid')).count()
     x = request.GET.get('abc')
-    # pdata=""
+    selected_category_name = None
     if x is not None:
         pdata = product.objects.filter(category=x)
+        # Get the category name for heading
+        try:
+            selected_category_obj = category.objects.get(id=x)
+            selected_category_name = selected_category_obj.cname
+        except category.DoesNotExist:
+            selected_category_name = None
     else:
         pdata = product.objects.all().order_by('-id')
-    return render(request, 'user/products.html', {"cat": cdata, "products": pdata ,"noofitemsincart":noofitemsincart})
+        selected_category_name = 'All Books'  # Set heading for All Books
+    return render(request, 'user/products.html', {
+        "cat": cdata,
+        "products": pdata ,
+        "noofitemsincart": noofitemsincart,
+        "selected_category": x,
+        "selected_category_name": selected_category_name,
+    })
 
 
 def signup(req):
@@ -468,7 +483,7 @@ def signin(req):
             req.session["userid"] = uname
 
             return HttpResponse(
-                "<script>alert('Logged In Successfully..');window.location.href='/user1/signin/';</script>")
+                "<script>alert('Logged In Successfully..');window.location.href='/user1/home/';</script>")
         else:
             return HttpResponse(
                 "<script>alert('User Id or Password is incorrect');window.location.href='/user1/signin/';</script>")
@@ -646,6 +661,99 @@ def cart(request):
 
     return render(request, 'user/cart.html', {"cart": cartdata, "noofitemsincart": noofitemsincart})
 
+import razorpay
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseBadRequest
+from .models import profile, product, order, addtocart
+import datetime
+import hmac
+import hashlib
+
+# Initialize Razorpay client
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+def start_payment(request, pid):
+    userid = request.session.get('userid')
+    if not userid:
+        return redirect('signin')
+
+    user = profile.objects.get(email=userid)
+    prod = product.objects.get(id=pid)
+
+    amount = int(prod.disprice * 100)  # Razorpay needs amount in paise
+
+    # Create Razorpay order
+    razorpay_order = client.order.create(dict(amount=amount, currency='INR', payment_capture=1))
+    razorpay_order_id = razorpay_order['id']
+
+    # Save order info temporarily in session
+    request.session['pending_order'] = {
+        'pid': pid,
+        'razorpay_order_id': razorpay_order_id,
+        'userid': userid,
+    }
+
+    context = {
+        'razorpay_merchant_key': settings.RAZORPAY_KEY_ID,
+        'razorpay_order_id': razorpay_order_id,
+        'amount': amount,
+        'currency': 'INR',
+        'callback_url': request.build_absolute_uri('/user1/payment_callback/'),
+        'product': prod,
+    }
+
+    return render(request, 'user/payment.html', context)
+
+@csrf_exempt
+def payment_callback(request):
+    if request.method == "POST":
+        payment_id = request.POST.get('razorpay_payment_id', '')
+        razorpay_order_id = request.POST.get('razorpay_order_id', '')
+        signature = request.POST.get('razorpay_signature', '')
+
+        pending_order = request.session.get('pending_order')
+
+        if not pending_order:
+            return HttpResponseBadRequest("No pending order found in session.")
+
+        # Verify payment signature
+        msg = f"{razorpay_order_id}|{payment_id}"
+        generated_signature = hmac.new(
+            bytes(settings.RAZORPAY_KEY_SECRET, 'utf-8'),
+            bytes(msg, 'utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+
+        if generated_signature == signature:
+            # Save order in DB on successful payment
+            user = profile.objects.get(email=pending_order['userid'])
+            prod = product.objects.get(id=pending_order['pid'])
+
+            order(
+                pid=prod.id,
+                userid=user.email,
+                remarks="paid",
+                status=True,
+                odate=datetime.datetime.now()
+            ).save()
+
+            # Remove from cart after order is placed
+            addtocart.objects.filter(pid=prod.id, userid=user.email).delete()
+
+            # Clear session pending order
+            del request.session['pending_order']
+
+            return HttpResponse(
+                "<script>alert('Payment successful and order confirmed!');window.location.href='/user1/myorders/'</script>"
+            )
+        else:
+            return HttpResponse(
+                "<script>alert('Payment verification failed! Please try again.');window.location.href='/user1/cart/'</script>"
+            )
+    else:
+        return HttpResponseBadRequest("Invalid request method.")
 
 from collections import Counter
 from .models import SearchLog, profile
@@ -677,16 +785,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 from fuzzywuzzy import fuzz
 from .models import product, category, profile, SearchLog, InterestTag
 
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('omw-1.4')
 
 stop_words = stopwords.words('english')
 stemmer = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
 
 # Load RoBERTa sentiment model
-sentiment_pipeline = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
+# sentiment_pipeline = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
 
 def preprocess_text(text):
     text = text.lower()
@@ -694,17 +799,6 @@ def preprocess_text(text):
     processed_words = [word for word in words if word not in stop_words]
     return " ".join(processed_words)
 
-def advanced_sentiment_analysis(text):
-    try:
-        result = sentiment_pipeline(text.strip())[0]
-        label_map = {
-            'LABEL_0': 'negative',
-            'LABEL_1': 'neutral',
-            'LABEL_2': 'positive'
-        }
-        return label_map.get(result['label'])
-    except:
-        return None
 
 def search_view(request):
     user_profile = profile.objects.get(email=request.session['userid'])
@@ -750,16 +844,44 @@ def search_view(request):
     # Check for category match
     all_categories = category.objects.values_list('cname', flat=True)
     matched_category = next((c for c in all_categories if c.lower() in query_lower), None)
+    from django.db import connection
+
     if matched_category:
         filtered_products = products.filter(category__cname__iexact=matched_category)
+        
         if request.user.is_authenticated and pdata:
             tag_obj, _ = InterestTag.objects.get_or_create(name=matched_category)
+            
             if tag_obj not in pdata.interests.all():
+                if pdata.interests.count() >= 5:
+                    # ✅ Delete the oldest tag — use raw SQL for intermediate table
+                    # This gets the M2M through model table name (auto-generated)
+                    m2m_table = profile.interests.through._meta.db_table
+                    
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            f'''
+                            DELETE FROM {m2m_table}
+                            WHERE id = (
+                                SELECT id FROM {m2m_table}
+                                WHERE profile_id = %s
+                                ORDER BY id ASC
+                                LIMIT 1
+                            )
+                            ''',
+                            [pdata.pk]
+                        )
+
+                # ✅ Now add the new tag
                 pdata.interests.add(tag_obj)
                 pdata.save()
                 async_update_recommendations(user_profile)
-                # recommend_products(pdata) 
-        return render(request, 'user/search_results.html', {'products': filtered_products, 'query': query})
+        return render(request, 'user/search_results.html', {
+            'products': filtered_products,
+            'query': query
+        })
+
+
 
     # Last step: general sentiment-based search
     sentiment = get_sentiment_score(query)
@@ -829,8 +951,29 @@ def search_view(request):
             # Only add if it's new (not similar) and sentiment is strong
             if not already_similar and sentiment > 0.9:
                 tag_obj, _ = InterestTag.objects.get_or_create(name=cleaned_query)
+                if pdata.interests.count() >= 5:
+                    # ✅ Delete the oldest tag — use raw SQL for intermediate table
+                    # This gets the M2M through model table name (auto-generated)
+                    m2m_table = profile.interests.through._meta.db_table
+                    
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            f'''
+                            DELETE FROM {m2m_table}
+                            WHERE id = (
+                                SELECT id FROM {m2m_table}
+                                WHERE profile_id = %s
+                                ORDER BY id ASC
+                                LIMIT 1
+                            )
+                            ''',
+                            [pdata.pk]
+                        )
+
+                # ✅ Now add the new tag
                 pdata.interests.add(tag_obj)
                 pdata.save()
+                # async_update_recommendations
 
                 async_update_recommendations(user_profile)
 

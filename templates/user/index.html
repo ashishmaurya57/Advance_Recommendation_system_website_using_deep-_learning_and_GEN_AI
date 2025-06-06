@@ -1,7 +1,31 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block content %}
+<style>
+    #category-scroll {
+      width: calc(186px * 6);
+      overflow-x: auto;
+      display: flex;
+      flex-wrap: nowrap;
+      scroll-behavior: smooth;
+      margin-left:105px;
+    }
+    .scroll-btn {
+    height: 50px;
+    width: 50px;
+    font-size: 24px;
+    background-color: #007bff; /* Bootstrap primary blue */
+    color: white;
+    border: none;
+  }
+
+  .scroll-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+</style>
 <!--START SLIDER-->
+
 <div class="row slider">
     <div class="h3 text-center"><b>Deals</b><b style="color:#4e83ab">Of</b><b>The</b><b style="color:#4e83ab">Day</b></div>
     <div class="col-sm-12">
@@ -89,29 +113,27 @@
 <br>
 <!--category-->
 <div class="row category bg-light fontfamily py-2">
-    <div class="h3 text-center pt-1"><b>Best</b><b style="color:#4e83ab"> Sellers</b></div>
-    <div class="col-sm-1"></div>
-    <div class="col-sm-10 pt-1">
-        <div class="row">
+    <div class="h3 text-center pt-1"><b>All</b><b style="color:#4e83ab"> Categories</b></div>
+
+    <div class="position-relative" style="padding: 0 40px;">
+        <button onclick="scrollLLeft()" class="btn btn-light position-absolute start-0 top-50 translate-middle-y z-10 scroll-btn">&lt;</button>
+        <button onclick="scrollRRight()" class="btn btn-light position-absolute end-0 top-50 translate-middle-y z-10 scroll-btn"style="height: 50px; width: 50px; font-size: 24px;">&gt;</button>
+
+        <div id="category-scroll">
             {% if data %}
             {% for x in data %}
-            <div class="col-sm-2" style="min-width:170px;">
-                <div class="row">
-                    <div class="col-sm-12 border p-2">
-                        <div class="card w-100">
-                            <img src="/{{x.ppic}}" class="card-img-top" alt="..." style="height:180px;width:180px;padding:5px;object-fit:contain;">
-                            <div class="card-body">
-                                <div class="font text-center">{{x.cname}}</div>
-                            </div>
-                        </div>
-                    </div>
+            <a href="/user1/products/?abc={{x.id}}" class="text-decoration-none text-dark">
+            <div class="card m-2 flex-shrink-0" style="width: 170px;">
+                <img src="/{{x.cpic}}" class="card-img-top" alt="{{x.cname}}" style="height:180px;width:170px;padding:5px;object-fit:contain;">
+                <div class="card-body text-center">
+                    <div class="font">{{x.cname}}</div>
                 </div>
             </div>
+        </a>
             {% endfor %}
             {% endif %}
         </div>
     </div>
-    <div class="col-sm-1"></div>
 </div>
 <!--end category-->
 
@@ -132,7 +154,7 @@
                 <b style="font-size:13px;">{{x.disprice}}/-</b>
                 <div class="mt-2">
                     <a href="/user1/viewdetails/?msg={{x.id}}" class="btn btn-sm btn-primary">View</a>
-                    <a href="/user1/process?pid={{x.id}}&bn=cart" class="btn btn-sm btn-outline-secondary">
+                    <a href="/user1/process/?pid={{x.id}}&bn=cart" class="btn btn-sm btn-outline-secondary">
                         <i class="fa fa-shopping-cart"></i>
                     </a>
                 </div>
@@ -219,8 +241,9 @@
     </div>
 </div>
 <!--end services-->
-<script>
+
 {% if request.session.userid %}
+<script>
 
 const perPage = 12; // 2 rows of 6
 let currentPage = 1;
@@ -250,6 +273,8 @@ function renderPage(page) {
         <b>Rs: </b><s class="text-danger">${product.tprice}/-</s>
         <b>${product.disprice}/-</b>
         <a href="/user1/viewdetails/?msg=${product.id}" class="btn btn-sm btn-primary mt-1">View</a>
+        <a href="/user1/process/?pid=${product.id}&bn=cart" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa fa-shopping-cart"></i></a>
       </div>
     `;
     container.appendChild(card);
@@ -307,10 +332,24 @@ nextBtn.addEventListener('click', () => {
 fetchRecommendations();
 
 // Poll every 15 seconds to check for updated recommendations
-setInterval(fetchRecommendations, 30000);
-
-{% endif %}
+setInterval(fetchRecommendations, 60000);
 </script>
+<script>
+  const cardWidth = 186; // card width + margin total
+
+function scrollLLeft() {
+    const container = document.getElementById('category-scroll');
+    container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+}
+
+function scrollRRight() {
+    const container = document.getElementById('category-scroll');
+    container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+}
+
+</script>
+{% endif %}
+
 
 
 {% endblock %}

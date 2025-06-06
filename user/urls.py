@@ -23,4 +23,6 @@ urlpatterns = [
     path('api/get_recommendations/', views.get_recommendations_api, name='get_recommendations_api'),
     path('set-language/', views.set_language, name='set_language'),
     path('api/translate-pdf-pages/', views.translate_pdf_pages_api, name='translate_pdf_pages_api'),
+    path('start_payment/<int:pid>/', views.start_payment, name='start_payment'),
+    path('payment_callback/', views.payment_callback, name='payment_callback'),
 ]
