@@ -80,7 +80,7 @@ def get_sentiment_score(text):
     Returns a sentiment score between 0 and 1.
     1 = very positive sentiment, 0 = very negative sentiment.
     """
-    result = sentiment_analyzer(text[:512])[0]  # limit length for performance
+    result = sentiment_analyzer()(text[:512])[0]  # limit length for performance
     if result['label'] == 'POSITIVE':
         return result['score']
     else:
@@ -90,8 +90,8 @@ def get_semantic_similarity(text1, text2):
     """
     Returns cosine similarity between two texts (0 to 1).
     """
-    emb1 = semantic_model.encode(text1, convert_to_tensor=True)
-    emb2 = semantic_model.encode(text2, convert_to_tensor=True)
+    emb1 = semantic_model().encode(text1, convert_to_tensor=True)
+    emb2 = semantic_model().encode(text2, convert_to_tensor=True)
     return util.pytorch_cos_sim(emb1, emb2).item()
 
 def get_interaction_score(user_profile, p):
@@ -148,7 +148,7 @@ Instructions:
 
 
 
-chain = LLMChain(llm=chatgroq, prompt=prompt)
+chain = LLMChain(llm=chatgroq(), prompt=prompt)
 
 
 # Weights for interaction types
