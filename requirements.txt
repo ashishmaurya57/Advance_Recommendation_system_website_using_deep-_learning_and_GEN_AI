@@ -16,3 +16,4 @@ python-dotenv>=0.21.0
 pypdf
 gunicorn
 python-decouple
+pikepdf
