@@ -157,3 +157,6 @@ APPEND_SLASH = True
 RAZORPAY_KEY_ID = 'rzp_test_rwnrZmJsqZX7fT'
 RAZORPAY_KEY_SECRET = '7ETAkJl8zEEh5qmaX9r4HQYn'
 
+from decouple import config
+
+GROQ_API_KEY = config('GROQ_API_KEY')

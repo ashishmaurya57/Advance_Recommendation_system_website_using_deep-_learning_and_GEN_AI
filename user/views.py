@@ -27,7 +27,7 @@ import os
 from dotenv import load_dotenv
 from .ml_models import sentiment_analyzer, semantic_model, chatgroq
 load_dotenv()
-api_key = os.getenv("GROQ_API_KEY")
+
 # chatgroq = ChatGroq(api_key=api_key, model="llama3-70b-8192", temperature=0.5)
 
 
