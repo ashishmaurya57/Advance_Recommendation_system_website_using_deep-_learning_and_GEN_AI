@@ -5,7 +5,7 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       python nltk_setup.py
-    startCommand: gunicorn myproject.wsgi:application
+    startCommand: gunicorn MyProject.wsgi:application
     envVars:
       - key: GROQ_API_KEY
-        sync: false   # You'll add the actual key on the Render dashboard
+        sync: false
