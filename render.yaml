@@ -1,12 +1,11 @@
-# services:
-#   - type: web
-#     name: my-django-genai-app
-#     env: python
-#     buildCommand: |
-#       pip install -r requirements.txt
-#       python nltk_setup.py
-#     startCommand: gunicorn MyProject.wsgi:application --bind 0.0.0.0:$PORT --timeout 90
-#     envVars:
-#       - key: GROQ_API_KEY
-#         sync: false
-# #
+services:
+  - type: web
+    name: my-django-genai-app
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false  # Set this value in Render Dashboard
+      - key: DEBUG
+        value: "False"
