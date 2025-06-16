@@ -11,6 +11,11 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+from user.ml_models import semantic_model, chatgroq
+semantic_model()
+chatgroq()
+
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
 
 application = get_wsgi_application()

@@ -1,0 +1,24 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# SQLite & DB files
+
+
+
+# Logs
+*.log
+
+# Virtual environments
+tf_env/
+
+# Hugging Face & transformers cache (if stored locally)
+.cache/
+huggingface/
+transformers/
+
+# Jupyter and IPython files (optional)
+.ipynb_checkpoints/
+
+# Misc
+.DS_Store

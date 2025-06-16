@@ -10,7 +10,8 @@ _chatgroq = None
 def sentiment_analyzer():
     global _sentiment_analyzer
     if _sentiment_analyzer is None:
-        _sentiment_analyzer = pipeline("sentiment-analysis")
+        _sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert/distilbert-base-uncased-finetuned-sst-2-english", revision="714eb0f")
+
     return _sentiment_analyzer
 
 def semantic_model():

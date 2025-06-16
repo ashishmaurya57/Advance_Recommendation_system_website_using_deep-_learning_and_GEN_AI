@@ -71,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'MyProject.urls'
@@ -160,3 +161,9 @@ RAZORPAY_KEY_SECRET = '7ETAkJl8zEEh5qmaX9r4HQYn'
 from decouple import config
 
 GROQ_API_KEY = config('GROQ_API_KEY')
+import os
+
+STATICFILES_DIRS = [BASE_DIR / "static"]  # where your source CSS, JS, images are
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+

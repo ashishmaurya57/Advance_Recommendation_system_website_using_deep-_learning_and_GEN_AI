@@ -17,3 +17,5 @@ pypdf
 gunicorn
 python-decouple
 pikepdf
+razorpay
+whitenoise
