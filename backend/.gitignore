@@ -1,0 +1,5 @@
+.env
+tf_env/
+/venv
+node_modules
+.venv
