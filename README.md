@@ -74,3 +74,7 @@ The original SQLite data and uploaded files were copied to Supabase with
 `uv run python -m scripts.migrate_from_sqlite` (sources in `backend/legacy_data/`, git-ignored).
 Old customer passwords were stored in plain text; they are re-hashed automatically the next
 time each customer signs in.
+
+## Contributors
+- [Ashish Maurya](https://github.com/ashishmaurya57)
+- [Shikha Singh](https://github.com/Shikha170)
