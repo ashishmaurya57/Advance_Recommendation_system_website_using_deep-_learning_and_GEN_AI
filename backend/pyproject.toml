@@ -1,0 +1,35 @@
+[project]
+name = "booktown-backend"
+version = "0.1.0"
+description = "FastAPI backend for BookTown, a book store with an ML recommendation engine"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy[asyncio]>=2.0",
+    "pydantic-settings>=2.4",
+    "python-multipart>=0.0.9",
+    "itsdangerous>=2.2",
+    "sqladmin>=0.20",
+    "razorpay>=1.4",
+    "langchain-core>=0.3",
+    "langchain-groq>=0.3",
+    "transformers>=4.40",
+    "sentence-transformers>=3.0",
+    "torch>=2.2",
+    "nltk>=3.8",
+    "rapidfuzz>=3.9",
+    "pymupdf>=1.24",
+    "pikepdf>=9.0",
+    "deep-translator>=1.11",
+    "setuptools>=70",
+    "email-validator>=2.3.0",
+    "psycopg[binary]>=3.3.6",
+    "alembic>=1.20.0",
+]
+
+[dependency-groups]
+dev = ["httpx>=0.27", "pytest>=8.0"]
+
+[tool.uv]
+package = false

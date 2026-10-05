@@ -1,2 +1,25 @@
+# Secrets
 .env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
 tf_env/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Old Django data, already copied to Supabase (see backend/scripts/migrate_from_sqlite.py)
+backend/legacy_data/
+
+# Node / Vite
+node_modules/
+frontend/dist/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
