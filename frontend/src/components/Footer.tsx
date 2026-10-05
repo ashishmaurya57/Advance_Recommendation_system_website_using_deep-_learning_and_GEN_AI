@@ -11,6 +11,7 @@ export function Footer() {
           <p className="text-base font-semibold text-ink">BookTown</p>
           <p className="text-sm leading-relaxed text-ink-2">
             A book store with a recommendation engine that learns from what you read and search.
+            Explore here the varieties of books.
           </p>
         </div>
         <nav className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm" aria-label="Footer">
