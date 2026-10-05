@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://booktown-api.onrender.com/api/:path*"
+      "destination": "https://booktown-api-iquk.onrender.com/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
