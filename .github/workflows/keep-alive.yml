@@ -1,0 +1,22 @@
+# Pings the Render backend so the free instance doesn't sleep (Render sleeps after 15 idle
+# minutes) and runs a tiny DB query so the Supabase project doesn't pause.
+name: Keep backend awake
+
+on:
+  schedule:
+    - cron: "*/13 * * * *" # every 13 minutes (GitHub may start scheduled runs a few minutes late)
+  workflow_dispatch: # lets you run it by hand from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HEALTH_URL: https://booktown-api-iquk.onrender.com/api/health/db
+    steps:
+      - name: Ping backend and database
+        run: |
+          # Retries cover a cold start (~50 s) if the service did fall asleep.
+          curl --fail --silent --show-error --max-time 90 \
+               --retry 3 --retry-delay 20 --retry-all-errors \
+               "$HEALTH_URL"

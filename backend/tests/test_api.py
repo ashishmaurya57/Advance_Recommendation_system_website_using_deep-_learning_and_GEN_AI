@@ -160,3 +160,8 @@ def test_every_admin_form_renders(client, db):
         if row is not None and view.can_edit:
             pk = sa_inspect(row).identity[0]
             assert client.get(f"{base}/edit/{pk}").status_code == 200, f"{base}/edit/{pk}"
+
+
+def test_health_endpoints(client):
+    assert client.get("/api/health").json() == {"status": "ok"}
+    assert client.get("/api/health/db").json() == {"status": "ok", "database": "ok"}
