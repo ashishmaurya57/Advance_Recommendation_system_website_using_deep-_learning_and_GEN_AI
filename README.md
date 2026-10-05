@@ -6,7 +6,7 @@ embeddings, sentiment analysis and interaction history).
 | Part | Stack |
 | --- | --- |
 | `frontend/` | React 19, TypeScript, Vite, TanStack Router + Query, Tailwind CSS v4 |
-| `backend/` | FastAPI, SQLAlchemy 2, Alembic, SQLAdmin, transformers / sentence-transformers, Groq |
+| `backend/` | FastAPI, SQLAlchemy 2, Alembic, SQLAdmin, fastembed (ONNX embeddings, no torch), Groq LLMs |
 | Database | Supabase Postgres |
 | Files | Supabase Storage bucket `booktown` (covers, category images, profile photos, PDFs), indexed in the `media_files` table |
 
@@ -32,7 +32,7 @@ Open http://localhost:5173. Vite proxies `/api` and `/admin` to the backend.
 
 - **Admin panel:** http://localhost:5173/admin, sign in with the superuser from the old Django admin.
 - **API docs:** http://localhost:8000/docs
-- The first request that needs the ML models downloads them (about 350 MB, once).
+- The embedding model (~90 MB) downloads on first start into `backend/.cache/`.
 
 ## Project layout
 
@@ -67,6 +67,38 @@ uv run alembic upgrade head
 cd frontend
 npm run build                                          # type-check + production build
 ```
+
+## Deploy: backend on Render (free), frontend on Vercel
+
+```
+Browser -> your-site.vercel.app ----------- React app (Vercel)
+               \-- /api/* (rewrite) -----> booktown-api.onrender.com (FastAPI on Render)
+                                               |-- Supabase Postgres
+                                               \-- Supabase Storage
+```
+
+The browser only talks to the Vercel domain; Vercel forwards `/api/*` to Render, so the
+login cookie is first-party and no CORS setup is needed.
+
+**1. Backend on Render**
+1. Push this repo to GitHub.
+2. Render dashboard → **New → Blueprint** → choose the repo. It reads `render.yaml`
+   (free plan, root `backend/`, build + start commands, health check).
+3. Fill in the secret values it asks for:
+   - `DATABASE_URL`: Supabase → **Connect → Session pooler** URI, with the scheme changed to
+     `postgresql+psycopg://` (Render has no IPv6, so the "Direct" URL won't connect).
+   - `SUPABASE_URL`: `https://<project-ref>.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY`, `GROQ_API_KEY`, optional `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`
+4. Deploy. Check `https://<service>.onrender.com/api/health` returns `{"status":"ok"}`.
+   Admin panel: `https://<service>.onrender.com/admin`.
+
+**2. Frontend on Vercel**
+1. Put your Render URL in `frontend/vercel.json` (the `/api/:path*` destination), commit, push.
+2. Vercel → project settings → **Root Directory** = `frontend` (framework: Vite).
+3. Redeploy.
+
+Free-plan notes: Render sleeps after ~15 minutes without traffic; the first request after
+that takes ~30-60 s while it wakes up. The server uses ~250-370 MB of the 512 MB limit.
 
 ## Data migration from the old Django app
 

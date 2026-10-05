@@ -10,6 +10,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", extra="ignore")
 
+    environment: str = "development"  # "production" on Railway: HTTPS-only cookies
     secret_key: str = "change-me-in-backend-env"
     # Supabase Postgres, e.g. postgresql+psycopg://postgres:<pw>@db.<ref>.supabase.co:5432/postgres
     database_url: str
@@ -22,13 +23,21 @@ class Settings(BaseSettings):
     pdf_bucket: str = "booktown"  # book PDFs (public-read, opened in the browser)
 
     groq_api_key: str | None = None
-    groq_model: str = "openai/gpt-oss-120b"
+    groq_model: str = "openai/gpt-oss-120b"  # recommendation relevance scoring
+    groq_fast_model: str = "openai/gpt-oss-20b"  # sentiment scoring
+
+    # Where fastembed keeps the ONNX embedding model (downloaded once, ~90 MB).
+    model_cache_dir: Path = BACKEND_DIR / ".cache" / "fastembed"
 
     razorpay_key_id: str = ""
     razorpay_key_secret: str = ""
 
     # Session cookie lifetime (seconds): 14 days
     session_max_age: int = 60 * 60 * 24 * 14
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
 
     @property
     def storage_url(self) -> str:
@@ -42,7 +51,10 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    s = Settings()
+    if s.is_production and s.secret_key == "change-me-in-backend-env":
+        raise RuntimeError("Set SECRET_KEY before running in production.")
+    return s
 
 
 settings = get_settings()

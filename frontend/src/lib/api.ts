@@ -26,7 +26,10 @@ async function request<T>(method: string, path: string, body?: Body): Promise<T>
     throw new ApiError(0, "Can't reach the server. Is the backend running?");
   }
   if (!res.ok) {
-    let message = res.statusText || "Something went wrong.";
+    let message =
+      res.status === 404 && path !== "/auth/me"
+        ? `The server couldn't find ${path} (404). Is the backend deployed and the /api rewrite set up?`
+        : res.statusText || `Request failed (${res.status}).`;
     try {
       const data = await res.json();
       if (typeof data.detail === "string") message = data.detail;

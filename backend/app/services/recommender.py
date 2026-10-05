@@ -88,6 +88,12 @@ def _llm_score(product: Product, user_tags: list[str]) -> float | None:
 def compute_recommendations(db: Session, user: Profile) -> list[int]:
     user_tags = [t.name.lower() for t in user.interests]
     products = db.scalars(select(Product).options(selectinload(Product.category))).all()
+    # Embed every text we'll compare in one batch (fast) instead of one at a time.
+    ml.embed_many(
+        user_tags
+        + [p.pdes.lower() for p in products]
+        + [p.category.cname.lower() for p in products]
+    )
 
     # 1. LLM relevance for products that are semantically close to the user's interests.
     llm_cache: dict[int, float] = dict(_llm_scores.get(user.email) or {})
@@ -135,7 +141,8 @@ def compute_recommendations(db: Session, user: Profile) -> list[int]:
             other_desc = other.pdes.lower()
             sim = ml.semantic_similarity(desc, other_desc)
             if sim >= 0.7:
-                combined = 0.4 * score + 0.4 * sim + 0.2 * ml.sentiment_score(other_desc)
+                sentiment = ml.sentiment_score(other_desc)
+                combined = 0.4 * score + 0.4 * sim + 0.2 * (0.5 if sentiment is None else sentiment)
                 interaction_recs[other.id] = max(interaction_recs.get(other.id, 0), combined)
     for p in products:
         if scores[p.id] > 1.5 and p.id not in interaction_recs:

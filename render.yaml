@@ -1,0 +1,40 @@
+# Render Blueprint for the BookTown API (FastAPI). The frontend is deployed on Vercel.
+# Render dashboard > New > Blueprint > pick this repo. Fill in the "sync: false" values when asked.
+services:
+  - type: web
+    name: booktown-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install uv && uv sync --frozen --no-dev && uv run --no-sync python -m scripts.prefetch_models
+    # Apply pending DB migrations, then serve. Render terminates HTTPS, so trust its
+    # X-Forwarded-* headers (needed for correct https:// links in /admin).
+    startCommand: uv run --no-sync alembic upgrade head && uv run --no-sync uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: NLTK_DATA
+        value: /opt/render/project/src/backend/.cache/nltk_data
+      # Supabase > Connect > "Session pooler" URI (Render has no IPv6, so the direct URL won't work).
+      # Change the scheme to postgresql+psycopg://
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: MEDIA_BUCKET
+        value: booktown
+      - key: PDF_BUCKET
+        value: booktown
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false

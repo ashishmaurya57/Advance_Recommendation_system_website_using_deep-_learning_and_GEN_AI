@@ -1,58 +1,94 @@
-"""Lazily loaded ML models (sentiment, sentence embeddings, Groq LLM).
+"""ML helpers without torch, so the API fits in a small (512 MB) server.
 
-Models are loaded on first use, not at import time, so the API starts quickly.
+- Sentence embeddings: fastembed runs all-MiniLM-L6-v2 (the same model as before) with
+  ONNX Runtime, so similarity scores and thresholds are unchanged.
+- Sentiment and recommendation scoring: Groq-hosted LLMs (free tier).
 """
 
+import logging
+import re
 import threading
+from collections.abc import Iterable
 from functools import lru_cache
+
+import numpy as np
 
 from app.core.config import settings
 
-# Importing transformers from two threads at once can fail with a half-initialised
-# module, so imports and model loading are serialised.
+log = logging.getLogger(__name__)
+
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
 _lock = threading.RLock()
-_models: dict[str, object] = {}
+_embedder = None
+_embeddings: dict[str, np.ndarray] = {}
+_MAX_CACHED_EMBEDDINGS = 20_000
 
 
-def _sentiment_pipeline():
+def _model():
+    global _embedder
     with _lock:
-        if "sentiment" not in _models:
-            from transformers import pipeline
+        if _embedder is None:
+            from fastembed import TextEmbedding
 
-            _models["sentiment"] = pipeline(
-                "sentiment-analysis",
-                model="distilbert/distilbert-base-uncased-finetuned-sst-2-english",
-                revision="714eb0f",
-            )
-        return _models["sentiment"]
-
-
-def _semantic_model():
-    with _lock:
-        if "semantic" not in _models:
-            from sentence_transformers import SentenceTransformer
-
-            _models["semantic"] = SentenceTransformer("all-MiniLM-L6-v2")
-        return _models["semantic"]
+            _embedder = TextEmbedding(EMBEDDING_MODEL, cache_dir=str(settings.model_cache_dir))
+        return _embedder
 
 
 def warm_up() -> None:
-    """Load both models ahead of the first request (run in a background thread)."""
-    _semantic_model()
-    _sentiment_pipeline()
+    """Load the embedding model ahead of the first request (run in a background thread)."""
+    try:
+        _model()
+    except Exception:
+        log.exception("Couldn't load the embedding model")
+
+
+def embed_many(texts: Iterable[str]) -> None:
+    """Embed any texts not cached yet, in one batch (much faster than one at a time)."""
+    missing = list(dict.fromkeys(t for t in texts if t not in _embeddings))
+    if not missing:
+        return
+    vectors = list(_model().embed(missing, batch_size=64))
+    with _lock:
+        if len(_embeddings) + len(missing) > _MAX_CACHED_EMBEDDINGS:
+            _embeddings.clear()
+        for text, vec in zip(missing, vectors, strict=True):
+            _embeddings[text] = vec / (np.linalg.norm(vec) or 1.0)
+
+
+def _embed(text: str) -> np.ndarray:
+    vec = _embeddings.get(text)
+    if vec is None:
+        embed_many([text])
+        vec = _embeddings[text]
+    return vec
+
+
+def semantic_similarity(a: str, b: str) -> float:
+    """Cosine similarity of two texts' sentence embeddings (-1..1)."""
+    return float(np.dot(_embed(a), _embed(b)))
+
+
+# ---- Groq LLMs --------------------------------------------------------------------------
+
+
+def _groq(model: str):
+    from langchain_groq import ChatGroq
+
+    return ChatGroq(
+        api_key=settings.groq_api_key,
+        model=model,
+        temperature=0,
+        reasoning_effort="low",  # it only has to output a number; keeps token use down
+        max_retries=6,  # the client backs off and retries on 429 rate limits
+    )
 
 
 @lru_cache(maxsize=1)
 def llm_score_chain():
     """Prompt -> Groq -> text chain that scores a product against a user's interests."""
-    with _lock:
-        return _build_llm_chain()
-
-
-def _build_llm_chain():
     from langchain_core.output_parsers import StrOutputParser
     from langchain_core.prompts import PromptTemplate
-    from langchain_groq import ChatGroq
 
     prompt = PromptTemplate(
         input_variables=["user_interests", "product_description", "category_name"],
@@ -76,30 +112,48 @@ Instructions:
 7. **Important: Return only the score as a float. No explanation, no extra text. Example: 0.75**
 """,
     )
-    llm = ChatGroq(
-        api_key=settings.groq_api_key,
-        model=settings.groq_model,
-        temperature=0.5,
-        reasoning_effort="low",  # it only has to output a number; keeps token use down
-        max_retries=6,  # the client backs off and retries on 429 rate limits
+    return prompt | _groq(settings.groq_model) | StrOutputParser()
+
+
+@lru_cache(maxsize=1)
+def _sentiment_chain():
+    from langchain_core.output_parsers import StrOutputParser
+    from langchain_core.prompts import PromptTemplate
+
+    prompt = PromptTemplate(
+        input_variables=["text"],
+        template=(
+            "Rate the sentiment of the text below as the probability that it is positive, "
+            "from 0.0 (clearly negative) to 1.0 (clearly positive). A neutral text is about 0.5. "
+            "Reply with only the number.\n\nText:\n{text}"
+        ),
     )
-    return prompt | llm | StrOutputParser()
+    return prompt | _groq(settings.groq_fast_model) | StrOutputParser()
 
 
-@lru_cache(maxsize=4096)
-def sentiment_score(text: str) -> float:
-    """0..1, where 1 is very positive and 0 is very negative."""
-    result = _sentiment_pipeline()(text[:512])[0]
-    return result["score"] if result["label"] == "POSITIVE" else 1 - result["score"]
+def parse_score(text: str) -> float | None:
+    match = re.search(r"[-+]?\d*\.\d+|\d+", str(text))
+    if not match:
+        return None
+    return min(max(float(match.group()), 0.0), 1.0)
 
 
-@lru_cache(maxsize=4096)
-def _embed(text: str):
-    return _semantic_model().encode(text, convert_to_tensor=True)
+_sentiments: dict[str, float] = {}
 
 
-def semantic_similarity(a: str, b: str) -> float:
-    """Cosine similarity of two texts' sentence embeddings."""
-    with _lock:
-        from sentence_transformers import util
-    return util.pytorch_cos_sim(_embed(a), _embed(b)).item()
+def sentiment_score(text: str) -> float | None:
+    """0..1, where 1 is very positive. None if the LLM is unavailable (not cached)."""
+    if text in _sentiments:
+        return _sentiments[text]
+    if not settings.groq_api_key:
+        return None
+    try:
+        score = parse_score(_sentiment_chain().invoke({"text": text[:2000]}))
+    except Exception as exc:
+        log.warning("Sentiment scoring failed: %s", exc)
+        return None
+    if score is not None:
+        if len(_sentiments) > 4096:
+            _sentiments.clear()
+        _sentiments[text] = score
+    return score
