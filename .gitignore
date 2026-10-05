@@ -8,6 +8,7 @@
 venv/
 tf_env/
 __pycache__/
+.cache/
 *.pyc
 .pytest_cache/
 

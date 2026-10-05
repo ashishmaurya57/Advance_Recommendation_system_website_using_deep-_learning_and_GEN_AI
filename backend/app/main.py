@@ -29,7 +29,7 @@ def create_app() -> FastAPI:
         session_cookie="booktown_session",
         max_age=settings.session_max_age,
         same_site="lax",
-        https_only=False,
+        https_only=settings.is_production,
     )
     app.add_middleware(
         CORSMiddleware,

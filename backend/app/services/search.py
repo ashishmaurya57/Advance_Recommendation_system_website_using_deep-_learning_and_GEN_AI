@@ -76,12 +76,14 @@ def search(db: Session, user: Profile, raw_query: str) -> SearchResult:
             query, [p for p in products if p.category.cname.lower() == matched.lower()]
         )
 
-    # 4. Semantic search, only for clearly positive "I want ..." style queries
+    # 4. Semantic search. Skip clearly negative queries ("books I hate"); neutral and
+    # positive ones go through. If the sentiment LLM is unavailable, don't block.
     sentiment = ml.sentiment_score(query)
-    if sentiment < 0.95:
+    if sentiment is not None and sentiment < 0.4:
         return SearchResult(query, [], "No books found.")
 
     cleaned = preprocess(query)
+    ml.embed_many([cleaned] + [p.pdes.lower() for p in products] + [p.category.cname.lower() for p in products])
     query_words = set(cleaned.split())
     scored: list[tuple[Product, float]] = []
     for p in products:
@@ -98,7 +100,7 @@ def search(db: Session, user: Profile, raw_query: str) -> SearchResult:
 
     # Remember the query as a new interest unless it's close to one the user already has.
     already_similar = any(ml.semantic_similarity(cleaned, t.name) > 0.7 for t in user.interests)
-    if not already_similar and sentiment > 0.9 and cleaned:
+    if not already_similar and sentiment is not None and sentiment > 0.8 and cleaned:
         if add_interest(db, user, cleaned):
             refresh_async(user.email)
 
